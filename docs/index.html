@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Zomato Notes</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ================================================================
+       NAV — sticky, always visible while scrolling
+  ================================================================ -->
+  <nav id="main-nav">
+    <div class="nav-brand">
+      <span class="nav-logo">🍕</span>
+      <span class="nav-title">Zomato Notes</span>
+      <span class="nav-subtitle">On-Call Knowledge Base</span>
+    </div>
+    <div class="nav-actions">
+      <button id="btn-all-notes" class="toggle-btn active">All Notes</button>
+      <button id="btn-my-notes"  class="toggle-btn">My Notes</button>
+      <button id="btn-export">Export ↓</button>
+    </div>
+  </nav>
+
+  <!-- Offline banner — shown when backend is unreachable -->
+  <div id="offline-banner" class="hidden">
+    ⚠ Showing cached data — backend unreachable. Some features may be unavailable.
+  </div>
+
+  <!-- ================================================================
+       MAIN LAYOUT — two-column on desktop, stacks on mobile
+  ================================================================ -->
+  <div class="layout">
+
+    <!-- ============================================================
+         SIDEBAR
+    ============================================================ -->
+    <aside id="tag-sidebar">
+
+      <!-- Tag filter chips -->
+      <div class="sidebar-section">
+        <h3 class="sidebar-heading">Filter by Tag</h3>
+        <div id="tag-filters"></div>
+      </div>
+
+      <!-- Quick tag jump (Phase 3 — linear search) -->
+      <div class="sidebar-section">
+        <h3 class="sidebar-heading">Quick Jump</h3>
+        <div id="quick-tag-jump"></div>
+        <div id="quick-find-result"></div>
+      </div>
+
+      <!-- Category tree (P3 spec requirement) -->
+      <div class="sidebar-section">
+        <h3 class="sidebar-heading">Browse Tags</h3>
+        <div id="category-tree"></div>
+      </div>
+
+    </aside>
+
+    <!-- ============================================================
+         MAIN CONTENT AREA
+    ============================================================ -->
+    <main>
+
+      <!-- ---- Add Note Form ------------------------------------ -->
+      <section id="add-note-section">
+        <h2 class="section-title">Add Note</h2>
+        <form id="add-note-form" novalidate>
+          <div class="form-row">
+            <label for="input-title">Title <span class="required">*</span></label>
+            <input id="input-title" type="text" placeholder="e.g. Payments API down" autocomplete="off" />
+          </div>
+          <div class="form-row">
+            <label for="input-content">Content <span class="required">*</span></label>
+            <textarea id="input-content" rows="3" placeholder="Describe the incident or note…"></textarea>
+          </div>
+          <div class="form-row form-row-inline">
+            <div class="form-col">
+              <label for="input-tag">Tag</label>
+              <input id="input-tag" type="text" placeholder="e.g. work" />
+            </div>
+            <div class="form-col">
+              <label for="input-owner">Owner ID</label>
+              <input id="input-owner" type="number" value="1" min="1" />
+            </div>
+            <div class="form-col">
+              <label for="input-severity">Severity</label>
+              <select id="input-severity">
+                <option value="">None</option>
+                <option value="P0">P0 — Critical</option>
+                <option value="P1">P1 — High</option>
+                <option value="P2">P2 — Medium</option>
+                <option value="P3">P3 — Low</option>
+              </select>
+            </div>
+          </div>
+          <p id="form-error" class="error-msg hidden"></p>
+          <button type="submit" class="btn-primary">Add Note</button>
+        </form>
+      </section>
+
+      <!-- ---- Search Bar --------------------------------------- -->
+      <section id="search-section">
+        <div id="search-bar">
+          <input id="search-input" type="text" placeholder="Search notes by title or tag…" />
+        </div>
+      </section>
+
+      <!-- ---- Phase 3: Ranking Controls ----------------------- -->
+      <section id="ranking-section">
+        <h2 class="section-title">Ranked Search</h2>
+
+        <!-- Keyword relevance + date sort -->
+        <div class="ranking-row">
+          <input id="keyword-input" type="text" placeholder="Keyword search (e.g. apple)…" />
+          <button id="btn-sort-relevance" class="btn-secondary">Sort by Relevance</button>
+          <button id="btn-sort-date"      class="btn-secondary">Sort by Date</button>
+        </div>
+
+        <!-- Exact title lookup -->
+        <div class="ranking-row" style="margin-top:0.75rem;">
+          <input id="lookup-input" type="text" placeholder="Jump to exact title…" />
+          <button id="btn-lookup-iterative" class="btn-secondary">Lookup (Iterative)</button>
+          <button id="btn-lookup-recursive" class="btn-secondary">Lookup (Recursive)</button>
+        </div>
+        <div id="lookup-result"></div>
+
+        <!-- Quick tag jump -->
+        <div class="ranking-row" style="margin-top:0.75rem; align-items:center;">
+          <span class="ranking-label">Quick jump:</span>
+          <div id="quick-tag-jump-ranking"></div>
+        </div>
+        <div id="quick-find-result-ranking"></div>
+
+        <!-- Ranked results container -->
+        <div id="ranked-results"></div>
+      </section>
+
+      <!-- ---- Phase 4: Smart Search (AI) — distinct from Phase 3 keyword search -->
+      <section id="smart-search-section">
+        <h2 class="section-title">🧠 Smart Search <span class="ai-badge">AI</span></h2>
+        <p class="section-hint">Finds notes by meaning, not keywords. Powered by local embeddings — no API key needed.</p>
+        <div class="smart-search-bar">
+          <input id="smart-search-input" type="text"
+                 placeholder="e.g. leg day exercise plan, dinner ideas with vegetables…" />
+          <button id="btn-smart-search" class="btn-primary">Search</button>
+        </div>
+        <div id="smart-search-results"></div>
+      </section>
+
+      <!-- ---- Notes List -------------------------------------- -->
+      <section id="notes-section">
+        <div class="notes-header">
+          <h2 class="section-title">Notes</h2>
+          <span id="notes-count" class="notes-count"></span>
+        </div>
+        <p id="loading-msg">Loading notes…</p>
+        <p id="error-msg" class="error-msg hidden"></p>
+        <div id="notes-list"></div>
+      </section>
+
+    </main>
+  </div>
+
+  <footer>
+    <p>Zomato Notes — On-Call Knowledge Base &nbsp;|&nbsp; Phase 1</p>
+  </footer>
+
+  <!-- ================================================================
+       P2: Bulk Tag Toolbar — shown when notes are selected
+  ================================================================ -->
+  <div id="bulk-toolbar" class="hidden">
+    <span id="selected-count">0 selected</span>
+    <input id="bulk-tag-input" type="text" placeholder="New tag for selected…" />
+    <button id="btn-bulk-apply" class="btn-primary">Apply Tag</button>
+    <button id="btn-bulk-cancel" class="btn-secondary">Cancel</button>
+  </div>
+
+  <!-- ================================================================
+       P2: Similar Notes Sidebar — slide-in panel on card click
+  ================================================================ -->
+  <aside id="similar-notes-panel" class="hidden">
+    <div class="similar-panel-header">
+      <h4>Similar Notes</h4>
+      <button id="close-similar" class="close-btn">✕</button>
+    </div>
+    <div id="similar-notes-list"></div>
+  </aside>
+
+  <script src="script.js"></script>
+</body>
+</html>
