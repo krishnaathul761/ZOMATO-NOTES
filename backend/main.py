@@ -107,6 +107,12 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     return crud.create_user(db, user)
 
 
+@app.get("/users", response_model=list[schemas.UserResponse], tags=["Users"])
+def list_users(db: Session = Depends(get_db)):
+    """List all registered authors/engineers."""
+    return db.query(models.User).order_by(models.User.id).all()
+
+
 # ===========================================================================
 # NOTE ENDPOINTS
 # NOTE: specific paths (/import, /search, /lookup, /quick-find, /smart-search)

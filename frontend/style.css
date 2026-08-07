@@ -627,3 +627,58 @@ select:focus {
 }
 .btn-use-existing:hover  { background: var(--green); }
 .btn-use-suggested:hover { background: var(--red-light); }
+
+/* ============================================================
+   AUTHOR / USER MANAGEMENT
+   ============================================================ */
+.user-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0;
+  font-size: 0.82rem;
+  border-bottom: 1px solid var(--border);
+}
+.user-item:last-child { border-bottom: none; }
+
+.user-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--red);
+  flex-shrink: 0;
+}
+
+.btn-register {
+  display: block;
+  width: 100%;
+  margin-top: 0.6rem;
+  padding: 0.35rem 0.5rem;
+  background: none;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color var(--transition), color var(--transition);
+}
+.btn-register:hover { border-color: var(--red); color: var(--red); }
+
+#register-form {
+  margin-top: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+#register-form input {
+  font-size: 0.82rem;
+  padding: 0.4rem 0.6rem;
+}
+
+/* note-owner label */
+.note-owner {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-left: auto;
+  font-weight: 500;
+}

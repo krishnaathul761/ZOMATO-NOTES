@@ -57,6 +57,23 @@
         <div id="category-tree"></div>
       </div>
 
+      <!-- Authors panel -->
+      <div class="sidebar-section">
+        <h3 class="sidebar-heading">Authors</h3>
+        <div id="user-list"></div>
+        <button id="btn-show-register" class="btn-register">+ Register as Author</button>
+        <form id="register-form" class="hidden">
+          <input id="input-reg-name"     type="text"     placeholder="Your name *" autocomplete="off" />
+          <input id="input-reg-email"    type="email"    placeholder="Email address *" />
+          <input id="input-reg-password" type="password" placeholder="Password (min 8 chars) *" />
+          <p id="register-error" class="error-msg hidden"></p>
+          <div style="display:flex;gap:0.4rem;margin-top:0.4rem;">
+            <button type="submit" class="btn-primary" style="flex:1">Register</button>
+            <button type="button" id="btn-cancel-register" class="btn-secondary" style="flex:1">Cancel</button>
+          </div>
+        </form>
+      </div>
+
     </aside>
 
     <!-- ============================================================
@@ -82,8 +99,8 @@
               <input id="input-tag" type="text" placeholder="e.g. work" />
             </div>
             <div class="form-col">
-              <label for="input-owner">Owner ID</label>
-              <input id="input-owner" type="number" value="1" min="1" />
+              <label for="input-owner">Author</label>
+              <select id="input-owner"></select>
             </div>
             <div class="form-col">
               <label for="input-severity">Severity</label>

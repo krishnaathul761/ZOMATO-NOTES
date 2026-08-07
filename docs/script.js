@@ -83,6 +83,130 @@ async function updateNote(id, patch) {
 }
 
 // ============================================================
+// AUTHOR / USER MANAGEMENT
+// ============================================================
+
+// Module-level user map: { id -> name } — populated on init
+let userMap = {};
+
+async function fetchUsers() {
+  const res = await fetch(`${API_BASE}/users`);
+  if (!res.ok) throw new Error(`GET /users failed: ${res.status}`);
+  return res.json(); // [{id, name, email, created_at}, ...]
+}
+
+async function createUser(name, email, password) {
+  const res = await fetch(`${API_BASE}/users`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, email, password }),
+  });
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}));
+    // Flatten pydantic detail arrays into a readable string
+    if (Array.isArray(e.detail)) {
+      throw new Error(e.detail.map(d => d.msg).join(", "));
+    }
+    throw new Error(e.detail || `POST /users failed: ${res.status}`);
+  }
+  return res.json();
+}
+
+function buildAuthorDropdown(users) {
+  const select = document.getElementById("input-owner");
+  const lastId = localStorage.getItem("last_author_id");
+  select.innerHTML = "";
+  users.forEach(u => {
+    const opt = document.createElement("option");
+    opt.value       = u.id;
+    opt.textContent = u.name;
+    select.appendChild(opt);
+  });
+  // Restore last selected author
+  if (lastId) select.value = lastId;
+  // Persist selection on change
+  select.addEventListener("change", () => {
+    localStorage.setItem("last_author_id", select.value);
+  });
+}
+
+function buildUserList(users) {
+  const div = document.getElementById("user-list");
+  div.innerHTML = "";
+  if (!users.length) { div.textContent = "No authors yet."; return; }
+  users.forEach(u => {
+    const item = document.createElement("div");
+    item.className = "user-item";
+    const dot = document.createElement("span");
+    dot.className   = "user-dot";
+    const name = document.createElement("span");
+    name.textContent = u.name;
+    const id = document.createElement("small");
+    id.textContent = ` #${u.id}`;
+    id.style.color = "var(--text-muted)";
+    item.appendChild(dot);
+    item.appendChild(name);
+    item.appendChild(id);
+    div.appendChild(item);
+  });
+}
+
+// Wire the Register form
+document.addEventListener("DOMContentLoaded", () => {
+  const btn        = document.getElementById("btn-show-register");
+  const form       = document.getElementById("register-form");
+  const cancelBtn  = document.getElementById("btn-cancel-register");
+  const errorEl    = document.getElementById("register-error");
+
+  btn.addEventListener("click", () => {
+    form.classList.toggle("hidden");
+    btn.textContent = form.classList.contains("hidden") ? "+ Register as Author" : "— Cancel";
+  });
+
+  cancelBtn.addEventListener("click", () => {
+    form.classList.add("hidden");
+    form.reset();
+    errorEl.classList.add("hidden");
+    btn.textContent = "+ Register as Author";
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name     = document.getElementById("input-reg-name").value.trim();
+    const email    = document.getElementById("input-reg-email").value.trim();
+    const password = document.getElementById("input-reg-password").value;
+    errorEl.classList.add("hidden");
+
+    if (!name || !email || !password) {
+      errorEl.textContent = "All fields are required.";
+      errorEl.classList.remove("hidden");
+      return;
+    }
+
+    const submitBtn = form.querySelector("button[type=submit]");
+    submitBtn.disabled = true; submitBtn.textContent = "Registering…";
+
+    try {
+      const newUser = await createUser(name, email, password);
+      // Add to map and rebuild UI
+      userMap[newUser.id] = newUser.name;
+      const users = await fetchUsers();
+      buildAuthorDropdown(users);
+      buildUserList(users);
+      // Auto-select the new author
+      document.getElementById("input-owner").value = newUser.id;
+      localStorage.setItem("last_author_id", newUser.id);
+      form.reset();
+      form.classList.add("hidden");
+      btn.textContent = "+ Register as Author";
+    } catch (err) {
+      errorEl.textContent = err.message;
+      errorEl.classList.remove("hidden");
+    } finally {
+      submitBtn.disabled = false; submitBtn.textContent = "Register";
+    }
+  });
+});
 // RENDERING
 // ============================================================
 function relativeTime(iso) {
@@ -140,7 +264,8 @@ function createNoteCard(note) {
   const meta = document.createElement("div"); meta.className = "note-meta";
   const tagEl = document.createElement("span"); tagEl.className = "note-tag"; tagEl.textContent = note.tag || "untagged";
   const timeEl = document.createElement("span"); timeEl.className = "note-time"; timeEl.title = note.created_at; timeEl.textContent = relativeTime(note.created_at);
-  const ownerEl = document.createElement("span"); ownerEl.className = "note-owner"; ownerEl.textContent = `owner #${note.owner_id}`;
+  const ownerEl = document.createElement("span"); ownerEl.className = "note-owner";
+  ownerEl.textContent = `by ${userMap[note.owner_id] || `Author #${note.owner_id}`}`;
   meta.appendChild(tagEl); meta.appendChild(timeEl); meta.appendChild(ownerEl);
   card.appendChild(meta);
 
@@ -241,6 +366,8 @@ async function handleAddNote(e) {
   const tag      = document.getElementById("input-tag").value.trim() || null;
   const ownerId  = parseInt(document.getElementById("input-owner").value, 10);
   const severity = document.getElementById("input-severity").value || null;
+  // Save last used author
+  localStorage.setItem("last_author_id", ownerId);
   const errorEl  = document.getElementById("form-error");
 
   if (!title || !content) { errorEl.textContent = "Title and content are required."; errorEl.classList.remove("hidden"); return; }
@@ -348,6 +475,12 @@ async function init() {
   showLoading(true);
   document.getElementById("error-msg").classList.add("hidden");
   try {
+    // Load users first so Author dropdown and userMap are ready
+    const users = await fetchUsers();
+    users.forEach(u => { userMap[u.id] = u.name; });
+    buildAuthorDropdown(users);
+    buildUserList(users);
+
     allNotes = await fetchNotes();
     buildTagChips(allNotes);
     renderNotes(allNotes);
