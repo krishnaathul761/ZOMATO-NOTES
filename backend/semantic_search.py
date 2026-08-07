@@ -4,20 +4,30 @@ Local, fully offline semantic search using sentence-transformers.
 
 First run: downloads ~90 MB of model weights to ~/.cache/huggingface/
 All subsequent runs: fully offline, no API key required.
+
+Model is lazy-loaded on first use to keep startup memory low (Render free tier).
 """
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
 MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 
-# Load model once at module import time so it is ready for every request.
-# The first time this runs it downloads the weights; after that it reads from cache.
-_model = SentenceTransformer(MODEL_NAME)
+# Lazy-loaded — model loads on first smart-search request, not at startup.
+# This keeps server startup memory under Render's 512MB free tier limit.
+_model = None
+
+
+def _get_model() -> SentenceTransformer:
+    """Return the cached model, loading it on first call."""
+    global _model
+    if _model is None:
+        _model = SentenceTransformer(MODEL_NAME)
+    return _model
 
 
 def compute_embeddings(texts: list[str]) -> np.ndarray:
     """Returns a 2-D float32 array of shape (len(texts), 384)."""
-    return _model.encode(texts, convert_to_numpy=True)
+    return _get_model().encode(texts, convert_to_numpy=True)
 
 
 def cosine_similarity_scores(query_vec: np.ndarray,
