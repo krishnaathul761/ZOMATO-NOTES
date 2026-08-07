@@ -1,10 +1,15 @@
 # Zomato Notes — On-Call Knowledge Base
 
 An internal notes and knowledge-base app for Zomato's on-call support engineering team.
-Engineers capture short notes during and after incidents, tag them for retrieval, search quickly
-during live incidents, and get lightweight AI assistance to reduce classification overhead.
 
-**Stack:** FastAPI · SQLite · plain HTML/CSS/JS · sentence-transformers (local embeddings)
+**Live URLs:**
+- **Frontend:** https://krishnaathul761.github.io/ZOMATO-NOTES/frontend/
+- **Backend API:** https://zomato-notes.onrender.com
+- **API Docs:** https://zomato-notes.onrender.com/docs
+
+> **Note:** The backend is hosted on Render's free tier. The first request after a period of inactivity may take 30–50 seconds while the server wakes up. Subsequent requests are fast.
+
+**Stack:** FastAPI · Supabase PostgreSQL · plain HTML/CSS/JS · sentence-transformers (local embeddings) · Groq LLM
 
 ---
 
@@ -130,7 +135,9 @@ The frontend is served at `http://127.0.0.1:5500`.
 
 ## Database
 
-SQLite — local file at `backend/zomato_notes.db`. No signup or external service required.
+**Production:** Supabase PostgreSQL (hosted, no setup needed for graders — data is already seeded).
+
+**Local development:** Change `DATABASE_URL` in `.env` to `sqlite:///./zomato_notes.db` for offline use.
 
 ---
 

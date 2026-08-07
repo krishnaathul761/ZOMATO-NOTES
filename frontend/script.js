@@ -4,7 +4,7 @@
    ============================================================ */
 
 // ── Config ─────────────────────────────────────────────────
-const API_BASE    = "http://127.0.0.1:8000";
+const API_BASE    = "https://zomato-notes.onrender.com";
 const X_TOKEN     = "zomato-dev-token";
 const CACHE_KEY   = "zomato_notes_cache";
 const MY_OWNER_ID = 1;
