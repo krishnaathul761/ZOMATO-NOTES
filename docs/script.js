@@ -464,9 +464,21 @@ document.addEventListener("DOMContentLoaded", () => {
 // PHASE 4 — SMART SEARCH (AI)
 // ============================================================
 async function fetchSmartSearch(query) {
-  const res = await fetch(`${API_BASE}/notes/smart-search?q=${encodeURIComponent(query)}`);
-  if (!res.ok) throw new Error(`Smart search failed: ${res.status}`);
-  return res.json();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 120000); // 120s — model loads on first call
+  try {
+    const res = await fetch(
+      `${API_BASE}/notes/smart-search?q=${encodeURIComponent(query)}`,
+      { signal: controller.signal }
+    );
+    clearTimeout(timeout);
+    if (!res.ok) throw new Error(`Smart search failed: ${res.status}`);
+    return res.json();
+  } catch (err) {
+    clearTimeout(timeout);
+    if (err.name === "AbortError") throw new Error("Smart search timed out. The AI model is loading — please try again in 30 seconds.");
+    throw err;
+  }
 }
 
 function renderSmartResults(results) {
@@ -486,9 +498,19 @@ function renderSmartResults(results) {
 document.addEventListener("DOMContentLoaded", () => {
   const runSmartSearch = async () => {
     const q = document.getElementById("smart-search-input").value.trim(); if (!q) return;
-    const c = document.getElementById("smart-search-results"); c.textContent = "Searching…"; c.style.color = "var(--text-muted)";
-    try { renderSmartResults(await fetchSmartSearch(q)); }
-    catch (err) { c.textContent = `Error: ${err.message}`; c.style.color = "var(--red)"; }
+    const c = document.getElementById("smart-search-results");
+    const btn = document.getElementById("btn-smart-search");
+    c.textContent = "Searching… (first search may take 30–60 seconds while the AI model loads)";
+    c.style.color = "var(--text-muted)";
+    btn.disabled = true; btn.textContent = "Searching…";
+    try {
+      renderSmartResults(await fetchSmartSearch(q));
+    } catch (err) {
+      c.textContent = `Error: ${err.message}`;
+      c.style.color = "var(--red)";
+    } finally {
+      btn.disabled = false; btn.textContent = "Search";
+    }
   };
   document.getElementById("btn-smart-search").addEventListener("click", runSmartSearch);
   document.getElementById("smart-search-input").addEventListener("keydown", e => { if (e.key === "Enter") runSmartSearch(); });
