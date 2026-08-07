@@ -1,0 +1,629 @@
+/* ============================================================
+   CSS RESET & VARIABLES
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --red:        #c41c1c;
+  --red-dark:   #a51515;
+  --red-light:  #fdecea;
+  --blue:       #3949ab;
+  --blue-light: #e8eaf6;
+  --yellow:     #fff3cd;
+  --yellow-border: #ffc107;
+  --green:      #d4edda;
+  --bg:         #f5f5f5;
+  --surface:    #ffffff;
+  --border:     #e0e0e0;
+  --text:       #212121;
+  --text-muted: #757575;
+  --radius:     6px;
+  --shadow:     0 1px 3px rgba(0,0,0,0.08);
+  --transition: 0.15s ease;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* ============================================================
+   NAV — sticky, Zomato red
+   ============================================================ */
+#main-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--red);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 1.5rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+}
+
+.nav-brand        { display: flex; align-items: center; gap: 0.5rem; }
+.nav-logo         { font-size: 1.4rem; }
+.nav-title        { font-size: 1.1rem; font-weight: 700; letter-spacing: 0.3px; }
+.nav-subtitle     { font-size: 0.75rem; opacity: 0.75; margin-left: 0.25rem; }
+.nav-actions      { display: flex; align-items: center; gap: 0.5rem; }
+
+/* ============================================================
+   OFFLINE BANNER
+   ============================================================ */
+#offline-banner {
+  background: var(--yellow);
+  color: #856404;
+  border-bottom: 1px solid var(--yellow-border);
+  padding: 0.5rem 1.5rem;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* ============================================================
+   LAYOUT — two-column grid
+   ============================================================ */
+.layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+#tag-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.sidebar-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.875rem;
+  box-shadow: var(--shadow);
+}
+
+.sidebar-heading {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  margin-bottom: 0.6rem;
+}
+
+/* ============================================================
+   TAG CHIPS
+   ============================================================ */
+#tag-filters,
+#quick-tag-jump { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+
+.tag-chip {
+  display: inline-block;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 0.78rem;
+  color: var(--text);
+  transition: background var(--transition), color var(--transition);
+  white-space: nowrap;
+}
+.tag-chip:hover         { background: #e0e0e0; }
+.tag-chip.active        { background: var(--red); color: #fff; border-color: var(--red); }
+
+/* ============================================================
+   TOGGLE BUTTONS (All Notes / My Notes)
+   ============================================================ */
+.toggle-btn {
+  padding: 0.3rem 0.85rem;
+  border: 1px solid rgba(255,255,255,0.5);
+  background: transparent;
+  color: #fff;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 0.82rem;
+  transition: background var(--transition);
+}
+.toggle-btn:hover  { background: rgba(255,255,255,0.15); }
+.toggle-btn.active { background: rgba(255,255,255,0.25); font-weight: 600; }
+
+/* ============================================================
+   EXPORT BUTTON
+   ============================================================ */
+#btn-export {
+  padding: 0.3rem 0.85rem;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.4);
+  color: #fff;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 0.82rem;
+  transition: background var(--transition);
+}
+#btn-export:hover { background: rgba(255,255,255,0.28); }
+
+/* ============================================================
+   CATEGORY TREE (P3)
+   ============================================================ */
+#category-tree ul { list-style: none; padding-left: 0; }
+#category-tree ul ul { padding-left: 1rem; }
+.tree-label {
+  cursor: pointer;
+  user-select: none;
+  padding: 0.2rem 0.4rem;
+  display: block;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  color: var(--text);
+}
+.tree-label:hover { background: var(--bg); }
+.tree-children    { padding-left: 1rem; }
+
+/* ============================================================
+   MAIN CONTENT
+   ============================================================ */
+main { display: flex; flex-direction: column; gap: 1.25rem; }
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.75rem;
+}
+
+/* ============================================================
+   ADD NOTE FORM
+   ============================================================ */
+#add-note-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  box-shadow: var(--shadow);
+}
+
+.form-row        { display: flex; flex-direction: column; gap: 0.3rem; margin-bottom: 0.75rem; }
+.form-row label  { font-size: 0.82rem; font-weight: 600; color: var(--text-muted); }
+.required        { color: var(--red); }
+
+.form-row-inline { flex-direction: row; gap: 1rem; }
+.form-col        { flex: 1; display: flex; flex-direction: column; gap: 0.3rem; }
+.form-col label  { font-size: 0.82rem; font-weight: 600; color: var(--text-muted); }
+
+input[type="text"],
+input[type="number"],
+textarea {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--surface);
+  transition: border-color var(--transition);
+  width: 100%;
+}
+input:focus, textarea:focus {
+  outline: none;
+  border-color: var(--red);
+  box-shadow: 0 0 0 2px rgba(196,28,28,0.12);
+}
+textarea { resize: vertical; }
+
+.btn-primary {
+  background: var(--red);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  padding: 0.55rem 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+.btn-primary:hover { background: var(--red-dark); }
+
+/* ============================================================
+   SEARCH BAR
+   ============================================================ */
+#search-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.75rem 1rem; box-shadow: var(--shadow); }
+#search-input   { font-size: 0.92rem; }
+
+/* ============================================================
+   NOTES LIST
+   ============================================================ */
+#notes-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  box-shadow: var(--shadow);
+}
+
+.notes-header   { display: flex; align-items: baseline; gap: 0.75rem; margin-bottom: 0.75rem; }
+.notes-count    { font-size: 0.78rem; color: var(--text-muted); }
+
+#loading-msg    { text-align: center; color: var(--text-muted); padding: 2rem; }
+
+/* ============================================================
+   NOTE CARD — box model: content / padding / border / margin
+   ============================================================ */
+.note-card {
+  padding: 0.875rem 1rem;          /* inner breathing room */
+  border: 1px solid var(--border); /* border layer */
+  margin: 0.6rem 0;                /* outer spacing */
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  transition: box-shadow var(--transition), border-color var(--transition);
+  position: relative;
+  cursor: pointer;
+}
+.note-card:hover         { box-shadow: 0 3px 8px rgba(0,0,0,0.1); border-color: #bdbdbd; }
+.note-card.optimistic    { opacity: 0.55; border-style: dashed; }
+.note-card.highlight     { border: 2px solid var(--red); box-shadow: 0 0 0 3px rgba(196,28,28,0.12); }
+
+.note-title              { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.25rem; }
+.note-subtitle           { font-size: 0.78rem; color: var(--text-muted); font-style: italic; margin-bottom: 0.3rem; }
+.note-content            { font-size: 0.875rem; color: #424242; margin-bottom: 0.5rem; line-height: 1.55; }
+
+/* descendant selector: meta row inside note card */
+.note-card .note-meta    { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; font-size: 0.75rem; color: var(--text-muted); }
+.note-tag                { background: var(--bg); border: 1px solid var(--border); border-radius: 999px; padding: 0.1rem 0.5rem; font-size: 0.72rem; }
+.note-time               { cursor: help; }
+.note-owner              { margin-left: auto; }
+
+.delete-btn {
+  position: absolute;
+  top: 0.6rem; right: 0.75rem;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0.2rem 0.35rem;
+  border-radius: 4px;
+  transition: color var(--transition), background var(--transition);
+}
+.delete-btn:hover { color: var(--red); background: var(--red-light); }
+
+/* ============================================================
+   AI SUGGESTION PANEL (Phase 4 — rendered when ai_suggestion present)
+   ============================================================ */
+.ai-panel {
+  background: var(--blue-light);
+  border: 1px solid #c5cae9;
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  margin-top: 0.6rem;
+  font-size: 0.82rem;
+}
+.ai-label    { font-weight: 700; color: var(--blue); margin-bottom: 0.2rem; }
+.ai-tags     { background: #dce0f5; border-radius: 3px; padding: 0.1rem 0.4rem; font-size: 0.72rem; color: var(--blue); }
+.ai-summary  { color: #555; margin: 0.35rem 0; font-style: italic; }
+.btn-apply-tag {
+  background: var(--blue); color: #fff;
+  border: none; border-radius: 4px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.75rem; cursor: pointer;
+  margin-top: 0.25rem;
+  transition: background var(--transition);
+}
+.btn-apply-tag:hover { background: #283593; }
+
+/* ============================================================
+   QUICK FIND RESULT
+   ============================================================ */
+#quick-find-result .note-card { font-size: 0.82rem; margin-top: 0.5rem; }
+
+/* ============================================================
+   ERROR / STATE MESSAGES
+   ============================================================ */
+.error-msg { color: var(--red); font-size: 0.82rem; margin-top: 0.3rem; }
+.hidden    { display: none !important; }
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+footer {
+  text-align: center;
+  padding: 1.5rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+  margin-top: 1rem;
+}
+
+/* ============================================================
+   RESPONSIVE — single column on narrow viewports
+   ============================================================ */
+@media (max-width: 600px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  #tag-sidebar { order: 2; }
+  main         { order: 1; }
+  .form-row-inline { flex-direction: column; }
+  .nav-subtitle { display: none; }
+}
+
+/* ============================================================
+   PHASE 3 — RANKING CONTROLS
+   ============================================================ */
+#ranking-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  box-shadow: var(--shadow);
+}
+
+.ranking-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.ranking-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.btn-secondary {
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.42rem 0.85rem;
+  font-size: 0.82rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--transition), border-color var(--transition);
+}
+.btn-secondary:hover { background: #e0e0e0; border-color: #bdbdbd; }
+.btn-secondary.active { background: var(--red); color: #fff; border-color: var(--red); }
+
+#ranked-results   { margin-top: 0.75rem; }
+#lookup-result    { margin-top: 0.5rem; }
+#quick-find-result-ranking { margin-top: 0.5rem; }
+
+.ranked-note-card {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin: 0.4rem 0;
+  background: #fafafa;
+  font-size: 0.875rem;
+}
+.ranked-score {
+  float: right;
+  background: var(--green);
+  color: #155724;
+  border-radius: 3px;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.72rem;
+  font-weight: bold;
+}
+
+/* ============================================================
+   PHASE 4 — SMART SEARCH (AI)
+   Visually distinct from Phase 3 ranking controls
+   ============================================================ */
+#smart-search-section {
+  background: #f0f4ff;
+  border: 1px solid #c5cae9;
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  box-shadow: var(--shadow);
+}
+
+#smart-search-section .section-title { color: var(--blue); }
+
+.ai-badge {
+  display: inline-block;
+  background: var(--blue);
+  color: #fff;
+  border-radius: 3px;
+  padding: 0.05rem 0.4rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  vertical-align: middle;
+  margin-left: 0.35rem;
+}
+
+.section-hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.smart-search-bar {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.smart-search-bar input { flex: 1; }
+
+#smart-search-results { margin-top: 0.75rem; }
+
+.smart-result-card {
+  background: var(--surface);
+  border: 1px solid #c5cae9;
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  margin: 0.4rem 0;
+  font-size: 0.875rem;
+  position: relative;
+}
+.smart-result-card strong { display: block; margin-bottom: 0.2rem; font-size: 0.92rem; }
+.smart-result-card p      { color: #424242; line-height: 1.5; margin-bottom: 0.35rem; }
+.smart-result-card small  { color: var(--text-muted); }
+
+.similarity-badge {
+  position: absolute;
+  top: 0.6rem; right: 0.75rem;
+  background: #e8f5e9;
+  color: #2e7d32;
+  border-radius: 3px;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+/* AI suggestion panel on note cards */
+.ai-panel    { background: var(--blue-light); border: 1px solid #c5cae9; border-radius: 4px;
+               padding: 0.5rem 0.75rem; margin-top: 0.6rem; font-size: 0.82rem; }
+.ai-label    { font-weight: 700; color: var(--blue); margin-bottom: 0.2rem; }
+.ai-tags     { background: #dce0f5; border-radius: 3px; padding: 0.1rem 0.4rem;
+               font-size: 0.72rem; color: var(--blue); }
+.ai-summary  { color: #555; margin: 0.35rem 0; font-style: italic; }
+.btn-apply-tag {
+  background: var(--blue); color: #fff; border: none; border-radius: 4px;
+  padding: 0.2rem 0.55rem; font-size: 0.75rem; cursor: pointer; margin-top: 0.25rem;
+  transition: background var(--transition);
+}
+.btn-apply-tag:hover { background: #283593; }
+
+/* ============================================================
+   PHASE 5 P2 — BULK TAG TOOLBAR
+   ============================================================ */
+#bulk-toolbar {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: var(--surface);
+  border-top: 2px solid var(--red);
+  padding: 0.75rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  z-index: 300;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+}
+#bulk-toolbar.hidden { display: none; }
+#selected-count { font-weight: 600; font-size: 0.85rem; color: var(--text-muted); }
+#bulk-tag-input { flex: 1; max-width: 240px; }
+
+.note-select {
+  width: 16px; height: 16px;
+  margin-right: 0.5rem;
+  cursor: pointer;
+  accent-color: var(--red);
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   PHASE 5 P2 — SIMILAR NOTES SIDEBAR
+   ============================================================ */
+#similar-notes-panel {
+  position: fixed;
+  right: 0; top: 0; bottom: 0;
+  width: 320px;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  padding: 1rem;
+  overflow-y: auto;
+  z-index: 200;
+  box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+}
+#similar-notes-panel.hidden { display: none; }
+
+.similar-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+}
+.similar-panel-header h4 { font-size: 0.95rem; color: var(--text); }
+
+.close-btn {
+  background: none; border: none;
+  font-size: 1rem; cursor: pointer;
+  color: var(--text-muted);
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+}
+.close-btn:hover { background: var(--bg); color: var(--red); }
+
+.similar-note-item {
+  border-bottom: 1px solid #f0f0f0;
+  padding: 0.6rem 0;
+  font-size: 0.82rem;
+}
+.similar-note-item strong { display: block; margin-bottom: 0.2rem; }
+.similar-note-item p { color: #555; line-height: 1.4; }
+.similarity-score { font-size: 0.72rem; color: var(--text-muted); margin-left: 0.4rem; }
+
+/* ============================================================
+   PHASE 5 P2 — SEVERITY BADGES
+   ============================================================ */
+.severity-badge {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-left: 0.4rem;
+  vertical-align: middle;
+}
+.severity-p0 { background: #f8d7da; color: #842029; }
+.severity-p1 { background: #fff3cd; color: #664d03; }
+.severity-p2 { background: #d1ecf1; color: #0c5460; }
+.severity-p3 { background: #d4edda; color: #155724; }
+
+select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  font-family: inherit;
+  background: var(--surface);
+  color: var(--text);
+  width: 100%;
+}
+select:focus {
+  outline: none;
+  border-color: var(--red);
+  box-shadow: 0 0 0 2px rgba(196,28,28,0.12);
+}
+
+/* ============================================================
+   PHASE 5 P2 — TAG MERGE WARNING
+   ============================================================ */
+.tag-confirm-box {
+  background: #fff8e1;
+  border: 1px solid var(--yellow-border);
+  padding: 0.4rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  margin-top: 0.4rem;
+}
+.btn-use-existing, .btn-use-suggested {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  margin-left: 0.3rem;
+}
+.btn-use-existing:hover  { background: var(--green); }
+.btn-use-suggested:hover { background: var(--red-light); }

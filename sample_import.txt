@@ -1,0 +1,6 @@
+Database connection pool exhausted during peak traffic, restarted service
+Payments API returning 503 errors, escalated to infra team
+Redis cache miss rate spiked to 80%, investigating eviction policy
+Kafka consumer lag growing on orders topic, scaled up consumers
+Load balancer health checks failing on two nodes, rerouted traffic
+On-call runbook: always check Grafana dashboard before escalating
