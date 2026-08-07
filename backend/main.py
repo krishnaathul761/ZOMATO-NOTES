@@ -37,9 +37,14 @@ import json
 load_dotenv()
 
 # ---------------------------------------------------------------------------
-# Create all tables on startup
+# Create all tables on startup — non-fatal if DB is temporarily unreachable
 # ---------------------------------------------------------------------------
-models.Base.metadata.create_all(bind=engine)
+try:
+    models.Base.metadata.create_all(bind=engine)
+    print("[DB] Tables created/verified successfully")
+except Exception as e:
+    print(f"[DB] Warning: could not create tables on startup: {e}")
+    print("[DB] Tables will be created on first successful DB connection")
 
 # ---------------------------------------------------------------------------
 # App instance
