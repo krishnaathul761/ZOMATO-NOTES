@@ -30,21 +30,40 @@ const CATEGORY_TREE = {
 // ============================================================
 async function fetchNotes(tag = null) {
   const url = tag ? `${API_BASE}/notes?tag=${encodeURIComponent(tag)}` : `${API_BASE}/notes`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`GET /notes failed: ${res.status}`);
-  const notes = await res.json();
-  if (!tag) localStorage.setItem(CACHE_KEY, JSON.stringify(notes));
-  return notes;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 90000);
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!res.ok) throw new Error(`GET /notes failed: ${res.status}`);
+    const notes = await res.json();
+    if (!tag) localStorage.setItem(CACHE_KEY, JSON.stringify(notes));
+    return notes;
+  } catch (err) {
+    clearTimeout(timeout);
+    if (err.name === "AbortError") throw new Error("Backend is waking up (cold start). Please wait 30 seconds and refresh.");
+    throw err;
+  }
 }
 
 async function createNote(title, content, tag, ownerId, severity) {
-  const res = await fetch(`${API_BASE}/notes`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ title, content, tag, owner_id: ownerId, severity }),
-  });
-  if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.detail || `POST /notes failed: ${res.status}`); }
-  return res.json();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 90000); // 90s for cold start
+  try {
+    const res = await fetch(`${API_BASE}/notes`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, content, tag, owner_id: ownerId, severity }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.detail || `POST /notes failed: ${res.status}`); }
+    return res.json();
+  } catch (err) {
+    clearTimeout(timeout);
+    if (err.name === "AbortError") throw new Error("Request timed out. Backend may be waking up — please try again in 30 seconds.");
+    throw err;
+  }
 }
 
 async function deleteNote(id) {
