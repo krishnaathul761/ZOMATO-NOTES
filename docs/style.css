@@ -927,3 +927,62 @@ select:focus {
   white-space: pre-wrap;
   word-break: break-word;
 }
+
+/* ============================================================
+   PROFILE MODAL
+   ============================================================ */
+.profile-box {
+  max-width: 480px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  text-align: left;
+}
+.profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.profile-header h2 { font-size: 1.1rem; font-weight: 700; }
+
+.profile-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+.profile-avatar {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: var(--red);
+  color: #fff;
+  font-size: 1.3rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.profile-name  { font-weight: 700; font-size: 1rem; }
+.profile-email { font-size: 0.82rem; color: var(--text-muted); }
+
+.profile-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1rem 0;
+}
+
+.profile-section { margin-bottom: 0.5rem; }
+.profile-section-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.danger-zone       { background: #fff5f5; padding: 0.75rem; border-radius: var(--radius); border: 1px solid #fed7d7; }
+.danger-title      { color: var(--red); }
+.profile-danger-hint { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.6rem; }

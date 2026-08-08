@@ -21,6 +21,7 @@
       <button id="btn-all-notes" class="toggle-btn active">All Notes</button>
       <button id="btn-my-notes"  class="toggle-btn">My Notes</button>
       <button id="btn-export"    class="toggle-btn">Export ↓</button>
+      <button id="btn-profile"   class="toggle-btn">👤 Profile</button>
       <button id="btn-logout"    class="logout-btn">Logout</button>
     </div>
   </nav>
@@ -242,6 +243,78 @@
     </div>
     <div id="similar-notes-list"></div>
   </aside>
+
+  <!-- Profile Modal -->
+  <div id="profile-modal" class="modal-overlay hidden">
+    <div class="modal-box profile-box">
+      <div class="profile-header">
+        <h2>My Profile</h2>
+        <button id="profile-close" class="close-btn">✕</button>
+      </div>
+
+      <!-- User info -->
+      <div class="profile-info">
+        <div class="profile-avatar" id="profile-avatar"></div>
+        <div>
+          <p id="profile-name-display" class="profile-name"></p>
+          <p id="profile-email-display" class="profile-email"></p>
+        </div>
+      </div>
+
+      <hr class="profile-divider" />
+
+      <!-- Edit Name -->
+      <div class="profile-section">
+        <h3 class="profile-section-title">Edit Name</h3>
+        <div class="auth-field">
+          <span class="auth-icon">👤</span>
+          <input id="profile-new-name" type="text" placeholder="New name" />
+        </div>
+        <div class="auth-field">
+          <span class="auth-icon">🔒</span>
+          <input id="profile-name-password" type="password" placeholder="Current password to confirm" />
+        </div>
+        <p id="profile-name-error" class="error-msg hidden"></p>
+        <button id="btn-save-name" class="btn-auth" style="margin-top:0.25rem;">Save Name</button>
+      </div>
+
+      <hr class="profile-divider" />
+
+      <!-- Change Password -->
+      <div class="profile-section">
+        <h3 class="profile-section-title">Change Password</h3>
+        <div class="auth-field">
+          <span class="auth-icon">🔒</span>
+          <input id="profile-current-password" type="password" placeholder="Current password" />
+        </div>
+        <div class="auth-field">
+          <span class="auth-icon">🔑</span>
+          <input id="profile-new-password" type="password" placeholder="New password (min 8 chars)" />
+        </div>
+        <div class="auth-field">
+          <span class="auth-icon">🔑</span>
+          <input id="profile-confirm-password" type="password" placeholder="Confirm new password" />
+        </div>
+        <p id="profile-password-error" class="error-msg hidden"></p>
+        <button id="btn-save-password" class="btn-auth" style="margin-top:0.25rem;">Change Password</button>
+      </div>
+
+      <hr class="profile-divider" />
+
+      <!-- Delete Account -->
+      <div class="profile-section danger-zone">
+        <h3 class="profile-section-title danger-title">Delete Account</h3>
+        <p class="profile-danger-hint">This permanently deletes your account and all your notes.</p>
+        <div class="auth-field">
+          <span class="auth-icon">🔒</span>
+          <input id="profile-delete-password" type="password" placeholder="Enter password to confirm" />
+        </div>
+        <p id="profile-delete-error" class="error-msg hidden"></p>
+        <button id="btn-delete-account" class="btn-danger" style="width:100%;margin-top:0.25rem;">Delete My Account</button>
+      </div>
+
+    </div>
+  </div>
 
   <!-- Note View Modal -->
   <div id="note-view-modal" class="modal-overlay hidden">

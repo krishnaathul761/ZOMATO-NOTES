@@ -133,6 +133,53 @@ def login(payload: dict, db: Session = Depends(get_db)):
     return {"id": user.id, "name": user.name, "email": user.email}
 
 
+@app.put("/users/{user_id}", tags=["Users"])
+def update_user(user_id: int, payload: dict, db: Session = Depends(get_db)):
+    """
+    Update a user's name and/or password.
+    Requires current_password to verify identity before any change.
+    """
+    current_password = payload.get("current_password", "")
+    new_name         = payload.get("name", "").strip()
+    new_password     = payload.get("new_password", "").strip()
+
+    user = crud.get_user(db, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user.password != current_password:
+        raise HTTPException(status_code=401, detail="Current password is incorrect")
+    if not new_name and not new_password:
+        raise HTTPException(status_code=400, detail="Provide name or new_password to update")
+    if new_name:
+        if not new_name:
+            raise HTTPException(status_code=422, detail="Name cannot be blank")
+        user.name = new_name
+    if new_password:
+        if len(new_password) < 8:
+            raise HTTPException(status_code=422, detail="Password must be at least 8 characters")
+        user.password = new_password
+    db.commit()
+    db.refresh(user)
+    return {"id": user.id, "name": user.name, "email": user.email}
+
+
+@app.delete("/users/{user_id}", tags=["Users"])
+def delete_user(user_id: int, payload: dict, db: Session = Depends(get_db)):
+    """
+    Delete a user account and all their notes.
+    Requires password confirmation.
+    """
+    password = payload.get("password", "")
+    user = crud.get_user(db, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user.password != password:
+        raise HTTPException(status_code=401, detail="Password is incorrect")
+    db.delete(user)
+    db.commit()
+    return {"detail": f"User {user.name} deleted successfully"}
+
+
 # ===========================================================================
 # NOTE ENDPOINTS
 # NOTE: specific paths (/import, /search, /lookup, /quick-find, /smart-search)

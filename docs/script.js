@@ -108,7 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       const user = await loginUser(email, password);
-      showAppView({ id: user.id, name: user.name });
+      showAppView({ id: user.id, name: user.name, email: user.email });
     } catch (err) {
       errorEl.textContent = err.message;
       errorEl.classList.remove("hidden");
@@ -137,7 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       const newUser = await createUser(name, email, password);
-      showAppView({ id: newUser.id, name: newUser.name });
+      showAppView({ id: newUser.id, name: newUser.name, email: newUser.email });
     } catch (err) {
       errorEl.textContent = err.message;
       errorEl.classList.remove("hidden");
@@ -806,6 +806,163 @@ async function initApp() {
 }
 
 // initApp() is called by showAppView() — not directly on DOMContentLoaded
+
+// ============================================================
+// PROFILE
+// ============================================================
+
+function openProfileModal() {
+  if (!currentUser) return;
+  // Fill in user info
+  document.getElementById("profile-name-display").textContent  = currentUser.name;
+  document.getElementById("profile-email-display").textContent = currentUser.email || "";
+  // Avatar: first letter of name
+  document.getElementById("profile-avatar").textContent = currentUser.name.charAt(0).toUpperCase();
+  // Pre-fill name field
+  document.getElementById("profile-new-name").value = currentUser.name;
+  // Clear all error messages and password fields
+  ["profile-name-error","profile-password-error","profile-delete-error"].forEach(id => {
+    document.getElementById(id).classList.add("hidden");
+  });
+  ["profile-name-password","profile-current-password","profile-new-password",
+   "profile-confirm-password","profile-delete-password"].forEach(id => {
+    document.getElementById(id).value = "";
+  });
+  document.getElementById("profile-modal").classList.remove("hidden");
+}
+
+async function apiUpdateUser(userId, payload) {
+  const res = await fetch(`${API_BASE}/users/${userId}`, {
+    method:  "PUT",
+    headers: { "Content-Type": "application/json" },
+    body:    JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}));
+    throw new Error(e.detail || "Update failed");
+  }
+  return res.json();
+}
+
+async function apiDeleteUser(userId, password) {
+  const res = await fetch(`${API_BASE}/users/${userId}`, {
+    method:  "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body:    JSON.stringify({ password }),
+  });
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}));
+    throw new Error(e.detail || "Delete failed");
+  }
+  return res.json();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Open profile
+  document.getElementById("btn-profile").addEventListener("click", openProfileModal);
+
+  // Close profile
+  document.getElementById("profile-close").addEventListener("click", () => {
+    document.getElementById("profile-modal").classList.add("hidden");
+  });
+  document.getElementById("profile-modal").addEventListener("click", e => {
+    if (e.target === document.getElementById("profile-modal"))
+      document.getElementById("profile-modal").classList.add("hidden");
+  });
+
+  // Save Name
+  document.getElementById("btn-save-name").addEventListener("click", async () => {
+    const newName  = document.getElementById("profile-new-name").value.trim();
+    const password = document.getElementById("profile-name-password").value;
+    const errEl    = document.getElementById("profile-name-error");
+    errEl.classList.add("hidden");
+
+    if (!newName) { errEl.textContent = "Name cannot be blank."; errEl.classList.remove("hidden"); return; }
+    if (!password) { errEl.textContent = "Enter your current password."; errEl.classList.remove("hidden"); return; }
+
+    const btn = document.getElementById("btn-save-name");
+    btn.disabled = true; btn.textContent = "Saving…";
+    try {
+      const updated = await apiUpdateUser(currentUser.id, { name: newName, current_password: password });
+      currentUser.name = updated.name;
+      localStorage.setItem(USER_KEY, JSON.stringify(currentUser));
+      document.getElementById("nav-user-label").textContent = `👤 ${updated.name}`;
+      document.getElementById("profile-name-display").textContent = updated.name;
+      document.getElementById("profile-avatar").textContent = updated.name.charAt(0).toUpperCase();
+      errEl.textContent = "Name updated successfully!";
+      errEl.style.color = "green";
+      errEl.classList.remove("hidden");
+      setTimeout(() => { errEl.classList.add("hidden"); errEl.style.color = ""; }, 3000);
+    } catch (err) {
+      errEl.textContent = err.message;
+      errEl.classList.remove("hidden");
+    } finally {
+      btn.disabled = false; btn.textContent = "Save Name";
+    }
+  });
+
+  // Change Password
+  document.getElementById("btn-save-password").addEventListener("click", async () => {
+    const current = document.getElementById("profile-current-password").value;
+    const newPw   = document.getElementById("profile-new-password").value;
+    const confirm = document.getElementById("profile-confirm-password").value;
+    const errEl   = document.getElementById("profile-password-error");
+    errEl.classList.add("hidden");
+
+    if (!current) { errEl.textContent = "Enter your current password."; errEl.classList.remove("hidden"); return; }
+    if (!newPw)   { errEl.textContent = "Enter a new password."; errEl.classList.remove("hidden"); return; }
+    if (newPw.length < 8) { errEl.textContent = "Password must be at least 8 characters."; errEl.classList.remove("hidden"); return; }
+    if (newPw !== confirm) { errEl.textContent = "Passwords do not match."; errEl.classList.remove("hidden"); return; }
+
+    const btn = document.getElementById("btn-save-password");
+    btn.disabled = true; btn.textContent = "Saving…";
+    try {
+      await apiUpdateUser(currentUser.id, { current_password: current, new_password: newPw });
+      ["profile-current-password","profile-new-password","profile-confirm-password"].forEach(id => {
+        document.getElementById(id).value = "";
+      });
+      errEl.textContent = "Password changed successfully!";
+      errEl.style.color = "green";
+      errEl.classList.remove("hidden");
+      setTimeout(() => { errEl.classList.add("hidden"); errEl.style.color = ""; }, 3000);
+    } catch (err) {
+      errEl.textContent = err.message;
+      errEl.classList.remove("hidden");
+    } finally {
+      btn.disabled = false; btn.textContent = "Change Password";
+    }
+  });
+
+  // Delete Account
+  document.getElementById("btn-delete-account").addEventListener("click", async () => {
+    const password = document.getElementById("profile-delete-password").value;
+    const errEl    = document.getElementById("profile-delete-error");
+    errEl.classList.add("hidden");
+
+    if (!password) { errEl.textContent = "Enter your password to confirm deletion."; errEl.classList.remove("hidden"); return; }
+
+    const btn = document.getElementById("btn-delete-account");
+    btn.disabled = true; btn.textContent = "Deleting…";
+    try {
+      await apiDeleteUser(currentUser.id, password);
+      // Account deleted — logout and return to home
+      document.getElementById("profile-modal").classList.add("hidden");
+      currentUser = null;
+      localStorage.removeItem(USER_KEY);
+      allNotes = []; showMyNotesOnly = false; activeTag = null;
+      document.getElementById("notes-list").innerHTML = "";
+      document.getElementById("category-tree").innerHTML = "";
+      document.getElementById("nav-user-label").textContent = "";
+      document.getElementById("btn-all-notes").classList.add("active");
+      document.getElementById("btn-my-notes").classList.remove("active");
+      showHomeView();
+    } catch (err) {
+      errEl.textContent = err.message;
+      errEl.classList.remove("hidden");
+      btn.disabled = false; btn.textContent = "Delete My Account";
+    }
+  });
+});
 
 // ============================================================
 // PHASE 3 — RANKING ENGINE
