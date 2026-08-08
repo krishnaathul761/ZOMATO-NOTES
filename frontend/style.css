@@ -686,11 +686,11 @@ select:focus {
 }
 
 /* ============================================================
-   HOME VIEW
+   HOME VIEW — Auth page
    ============================================================ */
 #home-view {
   min-height: 100vh;
-  background: var(--bg);
+  background: linear-gradient(135deg, #c41c1c 0%, #8b0000 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -699,69 +699,115 @@ select:focus {
 
 .home-container {
   width: 100%;
-  max-width: 460px;
+  max-width: 420px;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.5rem;
 }
 
 .home-hero {
   text-align: center;
-  padding: 1.5rem 0 0.5rem;
+  padding: 0.5rem 0;
 }
-.home-logo    { font-size: 2.5rem; }
-.home-title   { font-size: 1.8rem; font-weight: 800; color: var(--red); margin: 0.25rem 0; }
-.home-subtitle { font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; }
+.home-logo     { font-size: 3rem; display: block; margin-bottom: 0.5rem; }
+.home-title    { font-size: 2rem; font-weight: 800; color: #fff; margin: 0; }
+.home-subtitle { font-size: 0.88rem; color: rgba(255,255,255,0.75); margin-top: 0.4rem; }
 
-.home-card {
+/* Auth card */
+.auth-card {
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1.25rem 1.5rem;
-  box-shadow: var(--shadow);
-}
-.home-card-title {
-  font-size: 1rem;
-  font-weight: 700;
-  margin-bottom: 0.75rem;
-  color: var(--text);
-}
-.home-card-hint {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  margin-bottom: 0.75rem;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  overflow: hidden;
 }
 
-.home-select-row {
+/* Tab switcher */
+.auth-tabs {
   display: flex;
-  gap: 0.5rem;
+  border-bottom: 1px solid var(--border);
 }
-#home-select-row { display: flex; gap: 0.5rem; }
-#home-select-row select { flex: 1; }
-
-.home-form-row  { margin-bottom: 0.6rem; }
-.home-form-row input { width: 100%; }
-
-.home-loading-msg {
-  font-size: 0.82rem;
+.auth-tab {
+  flex: 1;
+  padding: 0.9rem;
+  background: none;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 600;
   color: var(--text-muted);
-  padding: 0.4rem 0;
+  cursor: pointer;
+  transition: color var(--transition), border-bottom var(--transition);
+  border-bottom: 3px solid transparent;
 }
+.auth-tab.active {
+  color: var(--red);
+  border-bottom: 3px solid var(--red);
+}
+.auth-tab:hover:not(.active) { color: var(--text); }
 
-.home-divider {
+/* Auth panels */
+.auth-panel { padding: 1.5rem; }
+.auth-panel.hidden { display: none; }
+
+/* Input with icon */
+.auth-field {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  color: var(--text-muted);
-  font-size: 0.82rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 0.75rem;
+  transition: border-color var(--transition), box-shadow var(--transition);
 }
-.home-divider::before,
-.home-divider::after {
-  content: "";
+.auth-field:focus-within {
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px rgba(196,28,28,0.1);
+}
+.auth-icon {
+  padding: 0 0.75rem;
+  font-size: 0.95rem;
+  opacity: 0.5;
+}
+.auth-field input {
   flex: 1;
-  height: 1px;
-  background: var(--border);
+  border: none;
+  background: none;
+  padding: 0.65rem 0.75rem 0.65rem 0;
+  font-size: 0.92rem;
+  outline: none;
 }
+.auth-field input:focus { box-shadow: none; border: none; }
+
+/* Auth submit button */
+.btn-auth {
+  width: 100%;
+  padding: 0.7rem;
+  background: var(--red);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 0.25rem;
+  transition: background var(--transition), transform 0.1s;
+}
+.btn-auth:hover   { background: var(--red-dark); }
+.btn-auth:active  { transform: scale(0.98); }
+.btn-auth:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* Switch link */
+.auth-switch {
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-top: 1rem;
+}
+.auth-switch a {
+  color: var(--red);
+  text-decoration: none;
+  font-weight: 600;
+}
+.auth-switch a:hover { text-decoration: underline; }
 
 /* Nav user label */
 .nav-user-label {
@@ -849,3 +895,35 @@ select:focus {
   transition: background var(--transition);
 }
 .btn-danger:hover { background: var(--red-dark); }
+
+/* ============================================================
+   NOTE VIEW MODAL
+   ============================================================ */
+.note-view-box {
+  max-width: 560px;
+  width: 100%;
+  text-align: left;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+.note-view-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0.5rem 0 0.5rem;
+  color: var(--text);
+  clear: both;
+}
+.note-view-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+}
+.note-view-content {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: #333;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

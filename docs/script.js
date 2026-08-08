@@ -34,11 +34,24 @@ function showHomeView() {
   document.getElementById("home-view").style.display  = "flex";
   document.getElementById("app-view").style.display   = "none";
   document.getElementById("nav-app-actions").style.display = "none";
-  // Clear login form on return
+  // Reset to login tab and clear forms
   const lf = document.getElementById("home-login-form");
   if (lf) lf.reset();
+  const rf = document.getElementById("home-register-form");
+  if (rf) rf.reset();
   const le = document.getElementById("home-login-error");
   if (le) le.classList.add("hidden");
+  const re = document.getElementById("home-register-error");
+  if (re) re.classList.add("hidden");
+  // Switch to login tab
+  const loginPanel = document.getElementById("panel-login");
+  const registerPanel = document.getElementById("panel-register");
+  if (loginPanel) loginPanel.classList.remove("hidden");
+  if (registerPanel) registerPanel.classList.add("hidden");
+  const tl = document.getElementById("tab-login");
+  const tr = document.getElementById("tab-register");
+  if (tl) tl.classList.add("active");
+  if (tr) tr.classList.remove("active");
 }
 
 function showAppView(user) {
@@ -47,13 +60,12 @@ function showAppView(user) {
   document.getElementById("home-view").style.display   = "none";
   document.getElementById("app-view").style.display    = "block";
   document.getElementById("nav-app-actions").style.display = "flex";
-  // Show logged-in user name in nav label
+  // Show logged-in user name in nav label only
   document.getElementById("nav-user-label").textContent = `👤 ${user.name}`;
-  // Show name on logout button: "Logout Alice"
-  document.getElementById("btn-logout").textContent = `Logout ${user.name}`;
-  // Update My Notes button to show current user's name
-  document.getElementById("btn-my-notes").textContent = `My Notes (${user.name})`;
-  // Always reset to All Notes on login — T8.5
+  // Keep button text plain
+  document.getElementById("btn-logout").textContent = "Logout";
+  document.getElementById("btn-my-notes").textContent = "My Notes";
+  // Always reset to All Notes on login
   showMyNotesOnly = false;
   document.getElementById("btn-all-notes").classList.add("active");
   document.getElementById("btn-my-notes").classList.remove("active");
@@ -65,17 +77,17 @@ function showAppView(user) {
 // Wire home view buttons on DOM ready
 document.addEventListener("DOMContentLoaded", () => {
 
-  // Home button — returns to home view without logging out
-  document.getElementById("btn-nav-home").addEventListener("click", () => {
-    document.getElementById("home-view").style.display  = "flex";
-    document.getElementById("app-view").style.display   = "none";
-    document.getElementById("nav-app-actions").style.display = "none";
-    // Clear login form
-    const lf = document.getElementById("home-login-form");
-    if (lf) lf.reset();
-    const le = document.getElementById("home-login-error");
-    if (le) le.classList.add("hidden");
-  });
+  // Auth tab switching
+  function switchTab(tab) {
+    document.getElementById("panel-login").classList.toggle("hidden", tab !== "login");
+    document.getElementById("panel-register").classList.toggle("hidden", tab !== "register");
+    document.getElementById("tab-login").classList.toggle("active", tab === "login");
+    document.getElementById("tab-register").classList.toggle("active", tab === "register");
+  }
+  document.getElementById("tab-login").addEventListener("click",    () => switchTab("login"));
+  document.getElementById("tab-register").addEventListener("click", () => switchTab("register"));
+  document.getElementById("link-to-register").addEventListener("click", e => { e.preventDefault(); switchTab("register"); });
+  document.getElementById("link-to-login").addEventListener("click",    e => { e.preventDefault(); switchTab("login"); });
 
   // Login form
   document.getElementById("home-login-form").addEventListener("submit", async (e) => {
@@ -142,10 +154,8 @@ document.addEventListener("DOMContentLoaded", () => {
     allNotes = []; showMyNotesOnly = false; activeTag = null;
     document.getElementById("notes-list").innerHTML = "";
     document.getElementById("category-tree").innerHTML = "";
-    // Reset nav label, logout button text, and My Notes button text
+    // Reset nav label only
     document.getElementById("nav-user-label").textContent = "";
-    document.getElementById("btn-logout").textContent = "Logout";
-    document.getElementById("btn-my-notes").textContent = "My Notes";
     document.getElementById("btn-all-notes").classList.add("active");
     document.getElementById("btn-my-notes").classList.remove("active");
     showHomeView();
@@ -274,24 +284,6 @@ async function createUser(name, email, password) {
   return res.json();
 }
 
-function buildAuthorDropdown(users) {
-  const select = document.getElementById("input-owner");
-  const lastId = localStorage.getItem("last_author_id");
-  select.innerHTML = "";
-  users.forEach(u => {
-    const opt = document.createElement("option");
-    opt.value       = u.id;
-    opt.textContent = u.name;
-    select.appendChild(opt);
-  });
-  // Restore last selected author
-  if (lastId) select.value = lastId;
-  // Persist selection on change
-  select.addEventListener("change", () => {
-    localStorage.setItem("last_author_id", select.value);
-  });
-}
-
 function buildUserList(users) {
   const div = document.getElementById("user-list");
   div.innerHTML = "";
@@ -313,62 +305,7 @@ function buildUserList(users) {
   });
 }
 
-// Wire the Register form
-document.addEventListener("DOMContentLoaded", () => {
-  const btn        = document.getElementById("btn-show-register");
-  const form       = document.getElementById("register-form");
-  const cancelBtn  = document.getElementById("btn-cancel-register");
-  const errorEl    = document.getElementById("register-error");
-
-  btn.addEventListener("click", () => {
-    form.classList.toggle("hidden");
-    btn.textContent = form.classList.contains("hidden") ? "+ Register as Author" : "— Cancel";
-  });
-
-  cancelBtn.addEventListener("click", () => {
-    form.classList.add("hidden");
-    form.reset();
-    errorEl.classList.add("hidden");
-    btn.textContent = "+ Register as Author";
-  });
-
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const name     = document.getElementById("input-reg-name").value.trim();
-    const email    = document.getElementById("input-reg-email").value.trim();
-    const password = document.getElementById("input-reg-password").value;
-    errorEl.classList.add("hidden");
-
-    if (!name || !email || !password) {
-      errorEl.textContent = "All fields are required.";
-      errorEl.classList.remove("hidden");
-      return;
-    }
-
-    const submitBtn = form.querySelector("button[type=submit]");
-    submitBtn.disabled = true; submitBtn.textContent = "Registering…";
-
-    try {
-      const newUser = await createUser(name, email, password);
-      // Add to map and rebuild UI
-      userMap[newUser.id] = newUser.name;
-      const users = await fetchUsers();
-      buildAuthorDropdown(users);
-      buildUserList(users);
-      // Auto-select the new author
-      document.getElementById("input-owner").value = newUser.id;
-      localStorage.setItem("last_author_id", newUser.id);
-      form.reset();
-      form.classList.add("hidden");
-      btn.textContent = "+ Register as Author";
-    } catch (err) {
-      errorEl.textContent = err.message;
-      errorEl.classList.remove("hidden");
-    } finally {
-      submitBtn.disabled = false; submitBtn.textContent = "Register";
-    }
-  });
-});
+// ============================================================
 // RENDERING
 // ============================================================
 function parseUTC(iso) {
@@ -413,11 +350,13 @@ function createNoteCard(note) {
   cb.type = "checkbox"; cb.className = "note-select"; cb.dataset.id = note.id;
   card.appendChild(cb);
 
-  // Delete btn
-  const del = document.createElement("button");
-  del.className = "delete-btn"; del.textContent = "✕"; del.title = "Delete";
-  del.addEventListener("click", e => { e.stopPropagation(); openDeleteModal(note.id, note.title, card); });
-  card.appendChild(del);
+  // Delete btn — only show for notes owned by current user
+  if (!currentUser || note.owner_id === currentUser.id) {
+    const del = document.createElement("button");
+    del.className = "delete-btn"; del.textContent = "✕"; del.title = "Delete";
+    del.addEventListener("click", e => { e.stopPropagation(); openDeleteModal(note.id, note.title, card); });
+    card.appendChild(del);
+  }
 
   // Title
   const titleEl = document.createElement("h3");
@@ -466,11 +405,11 @@ function createNoteCard(note) {
   confirmDiv.className = "tag-confirm-box hidden"; confirmDiv.id = `tag-confirm-${note.id}`;
   card.appendChild(confirmDiv);
 
-  // P2: similar notes on card click
+  // Card click → open note view popup (not similar notes)
   card.addEventListener("click", e => {
-    const skip = ["delete-btn","note-select","btn-apply-tag","btn-use-existing","btn-use-suggested"];
+    const skip = ["delete-btn","note-select","btn-apply-tag","btn-use-existing","btn-use-suggested","modal-confirm-delete","modal-cancel-delete"];
     if (skip.some(cls => e.target.classList.contains(cls))) return;
-    if (!isNaN(parseInt(note.id))) openSimilarPanel(note);
+    openNoteViewModal(note);
   });
 
   return card;
@@ -545,6 +484,12 @@ function buildSidebarQuickJump(tags) {
             mainCard.scrollIntoView({ behavior: "smooth", block: "center" });
             setTimeout(() => mainCard.classList.remove("highlight"), 3000);
           }
+          // Open similar notes when user clicks the Quick Jump result card
+          card.addEventListener("click", e => {
+            const skip = ["delete-btn","note-select"];
+            if (skip.some(cls => e.target.classList.contains(cls))) return;
+            openSimilarPanel(data.note);
+          });
         } else {
           resultDiv.textContent = `No notes with tag "${tag}"`;
           resultDiv.style.fontSize = "0.78rem";
@@ -566,6 +511,7 @@ function handleTagFilter(tag, chipEl) {
 }
 
 function applyFilters() {
+  if (!allNotes.length) return;   // guard: don't filter before notes load
   const q = document.getElementById("search-input").value.trim().toLowerCase();
   let r = showMyNotesOnly ? allNotes.filter(n => n.owner_id === (currentUser ? currentUser.id : 1)) : allNotes;
   if (activeTag) r = r.filter(n => n.tag === activeTag);
@@ -653,6 +599,52 @@ async function handleAddNote(e) {
 // DELETE
 // ============================================================
 // ============================================================
+// NOTE VIEW MODAL
+// ============================================================
+function openNoteViewModal(note) {
+  document.getElementById("note-view-title").textContent   = note.title;
+  document.getElementById("note-view-content").textContent = note.content;
+  document.getElementById("note-view-tag").textContent     = note.tag || "untagged";
+  document.getElementById("note-view-author").textContent  = `by ${userMap[note.owner_id] || `Author #${note.owner_id}`}`;
+  const timeEl = document.getElementById("note-view-time");
+  timeEl.textContent = relativeTime(note.created_at);
+  timeEl.title       = formatAbsolute(note.created_at);
+
+  // Severity badge
+  const badgeEl = document.getElementById("note-view-severity-badge");
+  badgeEl.innerHTML = "";
+  if (note.severity) {
+    const b = document.createElement("span");
+    b.className   = `severity-badge severity-${note.severity.toLowerCase()}`;
+    b.textContent = note.severity;
+    badgeEl.appendChild(b);
+  }
+
+  // AI suggestion
+  const aiEl = document.getElementById("note-view-ai");
+  aiEl.classList.add("hidden");
+  aiEl.innerHTML = "";
+  if (note.ai_suggestion && note.ai_suggestion.summary) {
+    aiEl.classList.remove("hidden");
+    const lbl = document.createElement("p"); lbl.className = "ai-label"; lbl.textContent = "AI Summary:";
+    const sum = document.createElement("p"); sum.className = "ai-summary"; sum.textContent = note.ai_suggestion.summary;
+    aiEl.appendChild(lbl); aiEl.appendChild(sum);
+  }
+
+  document.getElementById("note-view-modal").classList.remove("hidden");
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("note-view-close").addEventListener("click", () => {
+    document.getElementById("note-view-modal").classList.add("hidden");
+  });
+  document.getElementById("note-view-modal").addEventListener("click", e => {
+    if (e.target === document.getElementById("note-view-modal"))
+      document.getElementById("note-view-modal").classList.add("hidden");
+  });
+});
+
+// ============================================================
 // DELETE CONFIRMATION MODAL
 // ============================================================
 
@@ -718,11 +710,6 @@ document.addEventListener("DOMContentLoaded", () => {
     showMyNotesOnly = true;
     document.getElementById("btn-my-notes").classList.add("active");
     document.getElementById("btn-all-notes").classList.remove("active");
-    // Show count feedback
-    const myCount = allNotes.filter(n => n.owner_id === (currentUser ? currentUser.id : -1)).length;
-    if (myCount === 0) {
-      document.getElementById("notes-count").textContent = `No notes by ${currentUser ? currentUser.name : "you"} yet`;
-    }
     applyFilters();
   });
 });
@@ -824,24 +811,60 @@ async function initApp() {
 // PHASE 3 — RANKING ENGINE
 // ============================================================
 async function fetchRankedNotes(keyword) {
-  const res = await fetch(`${API_BASE}/notes/search?keyword=${encodeURIComponent(keyword)}`);
-  if (!res.ok) throw new Error(`Search failed: ${res.status}`);
-  return res.json();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 90000);
+  try {
+    const res = await fetch(`${API_BASE}/notes/search?keyword=${encodeURIComponent(keyword)}`, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!res.ok) throw new Error(`Search failed: ${res.status}`);
+    return res.json();
+  } catch (err) {
+    clearTimeout(timeout);
+    if (err.name === "AbortError") throw new Error("Backend is waking up — please try again in 30 seconds.");
+    throw err;
+  }
 }
 async function fetchNotesByDate() {
-  const res = await fetch(`${API_BASE}/notes/search?sort_by=date`);
-  if (!res.ok) throw new Error(`Date sort failed: ${res.status}`);
-  return res.json();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 90000);
+  try {
+    const res = await fetch(`${API_BASE}/notes/search?sort_by=date`, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!res.ok) throw new Error(`Date sort failed: ${res.status}`);
+    return res.json();
+  } catch (err) {
+    clearTimeout(timeout);
+    if (err.name === "AbortError") throw new Error("Backend is waking up — please try again in 30 seconds.");
+    throw err;
+  }
 }
 async function fetchLookup(title, algo) {
-  const res = await fetch(`${API_BASE}/notes/lookup?title=${encodeURIComponent(title)}&algo=${algo}`);
-  if (!res.ok) throw new Error(`Lookup failed: ${res.status}`);
-  return res.json();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 90000);
+  try {
+    const res = await fetch(`${API_BASE}/notes/lookup?title=${encodeURIComponent(title)}&algo=${algo}`, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!res.ok) throw new Error(`Lookup failed: ${res.status}`);
+    return res.json();
+  } catch (err) {
+    clearTimeout(timeout);
+    if (err.name === "AbortError") throw new Error("Backend is waking up — please try again in 30 seconds.");
+    throw err;
+  }
 }
 async function fetchQuickFind(tag) {
-  const res = await fetch(`${API_BASE}/notes/quick-find?tag=${encodeURIComponent(tag)}`);
-  if (!res.ok) throw new Error(`Quick find failed: ${res.status}`);
-  return res.json();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 90000);
+  try {
+    const res = await fetch(`${API_BASE}/notes/quick-find?tag=${encodeURIComponent(tag)}`, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!res.ok) throw new Error(`Quick find failed: ${res.status}`);
+    return res.json();
+  } catch (err) {
+    clearTimeout(timeout);
+    if (err.name === "AbortError") throw new Error("Backend is waking up — please try again in 30 seconds.");
+    throw err;
+  }
 }
 
 function renderRankedResults(notes, labelFn) {
@@ -867,45 +890,49 @@ function renderLookupResult(data, containerId) {
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-sort-relevance").addEventListener("click", async () => {
     const kw = document.getElementById("keyword-input").value.trim(); if (!kw) return;
-    document.getElementById("btn-sort-relevance").classList.add("active");
+    const btn = document.getElementById("btn-sort-relevance");
+    const res = document.getElementById("ranked-results");
+    btn.disabled = true; btn.textContent = "Searching…";
+    res.textContent = "Loading… (backend may be waking up)"; res.style.color = "var(--text-muted)";
     document.getElementById("btn-sort-date").classList.remove("active");
+    btn.classList.add("active");
     try { renderRankedResults(await fetchRankedNotes(kw), n => `score: ${n.score}`); }
-    catch (err) { document.getElementById("ranked-results").textContent = `Error: ${err.message}`; }
+    catch (err) { res.textContent = `Error: ${err.message}`; res.style.color = "var(--red)"; }
+    finally { btn.disabled = false; btn.textContent = "Sort by Relevance"; }
   });
 
   document.getElementById("btn-sort-date").addEventListener("click", async () => {
-    document.getElementById("btn-sort-date").classList.add("active");
+    const btn = document.getElementById("btn-sort-date");
+    const res = document.getElementById("ranked-results");
+    btn.disabled = true; btn.textContent = "Loading…";
+    res.textContent = "Loading… (backend may be waking up)"; res.style.color = "var(--text-muted)";
     document.getElementById("btn-sort-relevance").classList.remove("active");
+    btn.classList.add("active");
     try { renderRankedResults(await fetchNotesByDate(), n => new Date(n.created_at).toLocaleDateString()); }
-    catch (err) { document.getElementById("ranked-results").textContent = `Error: ${err.message}`; }
+    catch (err) { res.textContent = `Error: ${err.message}`; res.style.color = "var(--red)"; }
+    finally { btn.disabled = false; btn.textContent = "Sort by Date"; }
   });
 
   document.getElementById("btn-lookup-iterative").addEventListener("click", async () => {
     const t = document.getElementById("lookup-input").value.trim(); if (!t) return;
+    const btn = document.getElementById("btn-lookup-iterative");
+    btn.disabled = true; btn.textContent = "Looking up…";
+    document.getElementById("lookup-result").textContent = "Searching…";
     try { renderLookupResult(await fetchLookup(t, "iterative"), "lookup-result"); }
     catch (err) { document.getElementById("lookup-result").textContent = `Error: ${err.message}`; }
+    finally { btn.disabled = false; btn.textContent = "Lookup (Iterative)"; }
   });
 
   document.getElementById("btn-lookup-recursive").addEventListener("click", async () => {
     const t = document.getElementById("lookup-input").value.trim(); if (!t) return;
+    const btn = document.getElementById("btn-lookup-recursive");
+    btn.disabled = true; btn.textContent = "Looking up…";
+    document.getElementById("lookup-result").textContent = "Searching…";
     try { renderLookupResult(await fetchLookup(t, "recursive"), "lookup-result"); }
     catch (err) { document.getElementById("lookup-result").textContent = `Error: ${err.message}`; }
+    finally { btn.disabled = false; btn.textContent = "Lookup (Recursive)"; }
   });
 
-  // Quick tag jump buttons — Ranked Search section (hardcoded tags)
-  const qc = document.getElementById("quick-tag-jump-ranking");
-  ["work","health","recipes","travel","random","kb-demo","ai-demo"].forEach(tag => {
-    const btn = document.createElement("button"); btn.className = "tag-chip"; btn.textContent = tag;
-    btn.addEventListener("click", async () => {
-      const rd = document.getElementById("quick-find-result-ranking");
-      try {
-        const data = await fetchQuickFind(tag); rd.innerHTML = "";
-        if (data.found) { const card = createNoteCard(data.note); card.classList.add("highlight"); rd.appendChild(card); card.scrollIntoView({ behavior: "smooth", block: "nearest" }); }
-        else { rd.textContent = data.message; rd.style.color = "var(--text-muted)"; }
-      } catch (err) { rd.textContent = `Error: ${err.message}`; }
-    });
-    qc.appendChild(btn);
-  });
 });
 
 // ============================================================
@@ -948,11 +975,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const q = document.getElementById("smart-search-input").value.trim(); if (!q) return;
     const c = document.getElementById("smart-search-results");
     const btn = document.getElementById("btn-smart-search");
+    c.innerHTML = "";   // clear previous results
     c.textContent = "Searching… (first search may take 30–60 seconds while the AI model loads)";
     c.style.color = "var(--text-muted)";
     btn.disabled = true; btn.textContent = "Searching…";
     try {
       renderSmartResults(await fetchSmartSearch(q));
+      document.getElementById("smart-search-input").value = "";  // clear input after results
     } catch (err) {
       c.textContent = `Error: ${err.message}`;
       c.style.color = "var(--red)";

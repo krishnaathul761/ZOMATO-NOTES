@@ -18,7 +18,6 @@
     </div>
     <div class="nav-actions" id="nav-app-actions" style="display:none;">
       <span id="nav-user-label" class="nav-user-label"></span>
-      <button id="btn-nav-home"  class="toggle-btn">🏠 Home</button>
       <button id="btn-all-notes" class="toggle-btn active">All Notes</button>
       <button id="btn-my-notes"  class="toggle-btn">My Notes</button>
       <button id="btn-export"    class="toggle-btn">Export ↓</button>
@@ -41,52 +40,61 @@
       <div class="home-hero">
         <span class="home-logo">🍕</span>
         <h1 class="home-title">Zomato Notes</h1>
-        <p class="home-subtitle">On-call knowledge base for support engineers.<br/>Capture incidents. Tag them. Find them fast.</p>
+        <p class="home-subtitle">For support engineers. Capture incidents. Tag them. Find them fast.</p>
       </div>
 
-      <!-- Login as existing author -->
-      <div class="home-card" id="home-select-card">
-        <h2 class="home-card-title">Login</h2>
-        <p class="home-card-hint">Use your registered email and password.</p>
-        <form id="home-login-form" novalidate>
-          <div class="home-form-row">
-            <input id="home-login-email"    type="email"    placeholder="Email address *" autocomplete="email" />
-          </div>
-          <div class="home-form-row">
-            <input id="home-login-password" type="password" placeholder="Password *" autocomplete="current-password" />
-          </div>
-          <p id="home-login-error" class="error-msg hidden"></p>
-          <button type="submit" id="btn-home-login" class="btn-primary" style="width:100%">
-            Login →
-          </button>
-        </form>
-      </div>
+      <!-- Single tabbed auth card -->
+      <div class="home-card auth-card">
 
-      <!-- Divider -->
-      <div class="home-divider">
-        <span>or</span>
-      </div>
+        <!-- Tab switcher -->
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="tab-login"    data-tab="login">Login</button>
+          <button class="auth-tab"        id="tab-register" data-tab="register">Register</button>
+        </div>
 
-      <!-- Register new author -->
-      <div class="home-card">
-        <h2 class="home-card-title">Create your author profile</h2>
-        <p class="home-card-hint">Register once. Your name appears on every note you write.</p>
-        <form id="home-register-form" novalidate>
-          <div class="home-form-row">
-            <input id="home-reg-name"     type="text"     placeholder="Your name *" autocomplete="off" />
-          </div>
-          <div class="home-form-row">
-            <input id="home-reg-email"    type="email"    placeholder="Email address *" />
-          </div>
-          <div class="home-form-row">
-            <input id="home-reg-password" type="password" placeholder="Password (min 8 chars) *" />
-          </div>
-          <p id="home-register-error" class="error-msg hidden"></p>
-          <button type="submit" id="btn-home-register" class="btn-primary" style="width:100%">
-            Create Profile &amp; Go to Notes →
-          </button>
-        </form>
-      </div>
+        <!-- Login panel -->
+        <div class="auth-panel" id="panel-login">
+          <form id="home-login-form" novalidate>
+            <div class="auth-field">
+              <span class="auth-icon">✉</span>
+              <input id="home-login-email" type="email" placeholder="Email address" autocomplete="email" />
+            </div>
+            <div class="auth-field">
+              <span class="auth-icon">🔒</span>
+              <input id="home-login-password" type="password" placeholder="Password" autocomplete="current-password" />
+            </div>
+            <p id="home-login-error" class="error-msg hidden"></p>
+            <button type="submit" id="btn-home-login" class="btn-auth">
+              Login &rarr;
+            </button>
+          </form>
+          <p class="auth-switch">New here? <a id="link-to-register" href="#">Create an account</a></p>
+        </div>
+
+        <!-- Register panel -->
+        <div class="auth-panel hidden" id="panel-register">
+          <form id="home-register-form" novalidate>
+            <div class="auth-field">
+              <span class="auth-icon">👤</span>
+              <input id="home-reg-name" type="text" placeholder="Your name" autocomplete="off" />
+            </div>
+            <div class="auth-field">
+              <span class="auth-icon">✉</span>
+              <input id="home-reg-email" type="email" placeholder="Email address" />
+            </div>
+            <div class="auth-field">
+              <span class="auth-icon">🔒</span>
+              <input id="home-reg-password" type="password" placeholder="Password (min 8 chars)" />
+            </div>
+            <p id="home-register-error" class="error-msg hidden"></p>
+            <button type="submit" id="btn-home-register" class="btn-auth">
+              Create Account &rarr;
+            </button>
+          </form>
+          <p class="auth-switch">Already have an account? <a id="link-to-login" href="#">Login</a></p>
+        </div>
+
+      </div><!-- end auth-card -->
 
     </div>
   </div>
@@ -183,11 +191,6 @@
             <button id="btn-lookup-recursive" class="btn-secondary">Lookup (Recursive)</button>
           </div>
           <div id="lookup-result"></div>
-          <div class="ranking-row" style="margin-top:0.75rem; align-items:center;">
-            <span class="ranking-label">Quick jump:</span>
-            <div id="quick-tag-jump-ranking"></div>
-          </div>
-          <div id="quick-find-result-ranking"></div>
           <div id="ranked-results"></div>
         </section>
 
@@ -239,6 +242,23 @@
     </div>
     <div id="similar-notes-list"></div>
   </aside>
+
+  <!-- Note View Modal -->
+  <div id="note-view-modal" class="modal-overlay hidden">
+    <div class="modal-box note-view-box">
+      <button id="note-view-close" class="close-btn" style="float:right;font-size:1.2rem;">✕</button>
+      <div id="note-view-severity-badge"></div>
+      <h2 id="note-view-title" class="note-view-title"></h2>
+      <div class="note-view-meta">
+        <span id="note-view-tag"    class="note-tag"></span>
+        <span id="note-view-author" class="note-owner"></span>
+        <span id="note-view-time"   class="note-time"></span>
+      </div>
+      <hr style="border:none;border-top:1px solid var(--border);margin:0.75rem 0;" />
+      <p id="note-view-content" class="note-view-content"></p>
+      <div id="note-view-ai" class="ai-panel hidden" style="margin-top:1rem;"></div>
+    </div>
+  </div>
 
   <!-- Delete Confirmation Modal -->
   <div id="delete-modal" class="modal-overlay hidden">
