@@ -9,185 +9,211 @@
 <body>
 
   <!-- ================================================================
-       NAV — sticky, always visible while scrolling
+       NAV — sticky, always visible
   ================================================================ -->
   <nav id="main-nav">
     <div class="nav-brand">
       <span class="nav-logo">🍕</span>
       <span class="nav-title">Zomato Notes</span>
     </div>
-    <div class="nav-actions">
+    <div class="nav-actions" id="nav-app-actions" style="display:none;">
+      <span id="nav-user-label" class="nav-user-label"></span>
       <button id="btn-all-notes" class="toggle-btn active">All Notes</button>
       <button id="btn-my-notes"  class="toggle-btn">My Notes</button>
-      <button id="btn-export">Export ↓</button>
+      <button id="btn-export"    class="toggle-btn">Export ↓</button>
+      <button id="btn-logout"    class="logout-btn">Logout</button>
     </div>
   </nav>
 
-  <!-- Offline banner — shown when backend is unreachable -->
+  <!-- Offline banner -->
   <div id="offline-banner" class="hidden">
     ⚠ Showing cached data — backend unreachable. Some features may be unavailable.
   </div>
 
   <!-- ================================================================
-       MAIN LAYOUT — two-column on desktop, stacks on mobile
+       HOME VIEW — shown on first load / after logout
   ================================================================ -->
-  <div class="layout">
+  <div id="home-view">
+    <div class="home-container">
 
-    <!-- ============================================================
-         SIDEBAR
-    ============================================================ -->
-    <aside id="tag-sidebar">
-
-      <!-- Tag filter chips -->
-      <div class="sidebar-section">
-        <h3 class="sidebar-heading">Filter by Tag</h3>
-        <div id="tag-filters"></div>
+      <!-- Branding -->
+      <div class="home-hero">
+        <span class="home-logo">🍕</span>
+        <h1 class="home-title">Zomato Notes</h1>
+        <p class="home-subtitle">On-call knowledge base for support engineers.<br/>Capture incidents. Tag them. Find them fast.</p>
       </div>
 
-      <!-- Quick tag jump (Phase 3 — linear search) -->
-      <div class="sidebar-section">
-        <h3 class="sidebar-heading">Quick Jump</h3>
-        <div id="quick-tag-jump"></div>
-        <div id="quick-find-result"></div>
+      <!-- Continue as existing author -->
+      <div class="home-card" id="home-select-card">
+        <h2 class="home-card-title">Continue as</h2>
+        <div id="home-author-loading" class="home-loading-msg">Loading authors…</div>
+        <div id="home-select-row" class="hidden">
+          <select id="home-author-select"></select>
+          <button id="btn-home-select" class="btn-primary">Go to Notes →</button>
+        </div>
+        <p id="home-select-error" class="error-msg hidden"></p>
       </div>
 
-      <!-- Category tree (P3 spec requirement) -->
-      <div class="sidebar-section">
-        <h3 class="sidebar-heading">Browse Tags</h3>
-        <div id="category-tree"></div>
+      <!-- Divider -->
+      <div class="home-divider">
+        <span>or</span>
       </div>
 
-      <!-- Authors panel -->
-      <div class="sidebar-section">
-        <h3 class="sidebar-heading">Authors</h3>
-        <div id="user-list"></div>
-        <button id="btn-show-register" class="btn-register">+ Register as Author</button>
-        <form id="register-form" class="hidden">
-          <input id="input-reg-name"     type="text"     placeholder="Your name *" autocomplete="off" />
-          <input id="input-reg-email"    type="email"    placeholder="Email address *" />
-          <input id="input-reg-password" type="password" placeholder="Password (min 8 chars) *" />
-          <p id="register-error" class="error-msg hidden"></p>
-          <div style="display:flex;gap:0.4rem;margin-top:0.4rem;">
-            <button type="submit" class="btn-primary" style="flex:1">Register</button>
-            <button type="button" id="btn-cancel-register" class="btn-secondary" style="flex:1">Cancel</button>
+      <!-- Register new author -->
+      <div class="home-card">
+        <h2 class="home-card-title">Create your author profile</h2>
+        <p class="home-card-hint">Register once. Your name appears on every note you write.</p>
+        <form id="home-register-form" novalidate>
+          <div class="home-form-row">
+            <input id="home-reg-name"     type="text"     placeholder="Your name *" autocomplete="off" />
           </div>
+          <div class="home-form-row">
+            <input id="home-reg-email"    type="email"    placeholder="Email address *" />
+          </div>
+          <div class="home-form-row">
+            <input id="home-reg-password" type="password" placeholder="Password (min 8 chars) *" />
+          </div>
+          <p id="home-register-error" class="error-msg hidden"></p>
+          <button type="submit" id="btn-home-register" class="btn-primary" style="width:100%">
+            Create Profile &amp; Go to Notes →
+          </button>
         </form>
       </div>
 
-    </aside>
-
-    <!-- ============================================================
-         MAIN CONTENT AREA
-    ============================================================ -->
-    <main>
-
-      <!-- ---- Add Note Form ------------------------------------ -->
-      <section id="add-note-section">
-        <h2 class="section-title">Add Note</h2>
-        <form id="add-note-form" novalidate>
-          <div class="form-row">
-            <label for="input-title">Title <span class="required">*</span></label>
-            <input id="input-title" type="text" placeholder="e.g. Payments API down" autocomplete="off" />
-          </div>
-          <div class="form-row">
-            <label for="input-content">Content <span class="required">*</span></label>
-            <textarea id="input-content" rows="3" placeholder="Describe the incident or note…"></textarea>
-          </div>
-          <div class="form-row form-row-inline">
-            <div class="form-col">
-              <label for="input-tag">Tag</label>
-              <input id="input-tag" type="text" placeholder="e.g. work" />
-            </div>
-            <div class="form-col">
-              <label for="input-owner">Author</label>
-              <select id="input-owner"></select>
-            </div>
-            <div class="form-col">
-              <label for="input-severity">Severity</label>
-              <select id="input-severity">
-                <option value="">None</option>
-                <option value="P0">P0 — Critical</option>
-                <option value="P1">P1 — High</option>
-                <option value="P2">P2 — Medium</option>
-                <option value="P3">P3 — Low</option>
-              </select>
-            </div>
-          </div>
-          <p id="form-error" class="error-msg hidden"></p>
-          <button type="submit" class="btn-primary">Add Note</button>
-        </form>
-      </section>
-
-      <!-- ---- Search Bar --------------------------------------- -->
-      <section id="search-section">
-        <div id="search-bar">
-          <input id="search-input" type="text" placeholder="Search notes by title or tag…" />
-        </div>
-      </section>
-
-      <!-- ---- Phase 3: Ranking Controls ----------------------- -->
-      <section id="ranking-section">
-        <h2 class="section-title">Ranked Search</h2>
-
-        <!-- Keyword relevance + date sort -->
-        <div class="ranking-row">
-          <input id="keyword-input" type="text" placeholder="Keyword search (e.g. apple)…" />
-          <button id="btn-sort-relevance" class="btn-secondary">Sort by Relevance</button>
-          <button id="btn-sort-date"      class="btn-secondary">Sort by Date</button>
-        </div>
-
-        <!-- Exact title lookup -->
-        <div class="ranking-row" style="margin-top:0.75rem;">
-          <input id="lookup-input" type="text" placeholder="Jump to exact title…" />
-          <button id="btn-lookup-iterative" class="btn-secondary">Lookup (Iterative)</button>
-          <button id="btn-lookup-recursive" class="btn-secondary">Lookup (Recursive)</button>
-        </div>
-        <div id="lookup-result"></div>
-
-        <!-- Quick tag jump -->
-        <div class="ranking-row" style="margin-top:0.75rem; align-items:center;">
-          <span class="ranking-label">Quick jump:</span>
-          <div id="quick-tag-jump-ranking"></div>
-        </div>
-        <div id="quick-find-result-ranking"></div>
-
-        <!-- Ranked results container -->
-        <div id="ranked-results"></div>
-      </section>
-
-      <!-- ---- Phase 4: Smart Search (AI) — distinct from Phase 3 keyword search -->
-      <section id="smart-search-section">
-        <h2 class="section-title">🧠 Smart Search <span class="ai-badge">AI</span></h2>
-        <p class="section-hint">Finds notes by meaning, not keywords. Powered by local embeddings — no API key needed.</p>
-        <div class="smart-search-bar">
-          <input id="smart-search-input" type="text"
-                 placeholder="e.g. leg day exercise plan, dinner ideas with vegetables…" />
-          <button id="btn-smart-search" class="btn-primary">Search</button>
-        </div>
-        <div id="smart-search-results"></div>
-      </section>
-
-      <!-- ---- Notes List -------------------------------------- -->
-      <section id="notes-section">
-        <div class="notes-header">
-          <h2 class="section-title">Notes</h2>
-          <span id="notes-count" class="notes-count"></span>
-        </div>
-        <p id="loading-msg">Loading notes…</p>
-        <p id="error-msg" class="error-msg hidden"></p>
-        <div id="notes-list"></div>
-      </section>
-
-    </main>
+    </div>
   </div>
 
-  <footer>
-    <p>Zomato Notes &nbsp;&nbsp;</p>
-  </footer>
-
   <!-- ================================================================
-       P2: Bulk Tag Toolbar — shown when notes are selected
+       APP VIEW — shown after author is selected/created
   ================================================================ -->
+  <div id="app-view" style="display:none;">
+
+    <div class="layout">
+
+      <!-- SIDEBAR -->
+      <aside id="tag-sidebar">
+
+        <div class="sidebar-section">
+          <h3 class="sidebar-heading">Filter by Tag</h3>
+          <div id="tag-filters"></div>
+        </div>
+
+        <div class="sidebar-section">
+          <h3 class="sidebar-heading">Quick Jump</h3>
+          <div id="quick-tag-jump"></div>
+          <div id="quick-find-result"></div>
+        </div>
+
+        <div class="sidebar-section">
+          <h3 class="sidebar-heading">Browse Tags</h3>
+          <div id="category-tree"></div>
+        </div>
+
+        <div class="sidebar-section">
+          <h3 class="sidebar-heading">All Authors</h3>
+          <div id="user-list"></div>
+        </div>
+
+      </aside>
+
+      <!-- MAIN CONTENT -->
+      <main>
+
+        <!-- Add Note Form -->
+        <section id="add-note-section">
+          <h2 class="section-title">Add Note</h2>
+          <form id="add-note-form" novalidate>
+            <div class="form-row">
+              <label for="input-title">Title <span class="required">*</span></label>
+              <input id="input-title" type="text" placeholder="e.g. Payments API down" autocomplete="off" />
+            </div>
+            <div class="form-row">
+              <label for="input-content">Content <span class="required">*</span></label>
+              <textarea id="input-content" rows="3" placeholder="Describe the incident or note…"></textarea>
+            </div>
+            <div class="form-row form-row-inline">
+              <div class="form-col">
+                <label for="input-tag">Tag</label>
+                <input id="input-tag" type="text" placeholder="e.g. work" />
+              </div>
+              <div class="form-col">
+                <label for="input-severity">Severity</label>
+                <select id="input-severity">
+                  <option value="">None</option>
+                  <option value="P0">P0 — Critical</option>
+                  <option value="P1">P1 — High</option>
+                  <option value="P2">P2 — Medium</option>
+                  <option value="P3">P3 — Low</option>
+                </select>
+              </div>
+            </div>
+            <p id="form-error" class="error-msg hidden"></p>
+            <button type="submit" class="btn-primary">Add Note</button>
+          </form>
+        </section>
+
+        <!-- Search Bar -->
+        <section id="search-section">
+          <div id="search-bar">
+            <input id="search-input" type="text" placeholder="Search notes by title or tag…" />
+          </div>
+        </section>
+
+        <!-- Phase 3: Ranking Controls -->
+        <section id="ranking-section">
+          <h2 class="section-title">Ranked Search</h2>
+          <div class="ranking-row">
+            <input id="keyword-input" type="text" placeholder="Keyword search (e.g. apple)…" />
+            <button id="btn-sort-relevance" class="btn-secondary">Sort by Relevance</button>
+            <button id="btn-sort-date"      class="btn-secondary">Sort by Date</button>
+          </div>
+          <div class="ranking-row" style="margin-top:0.75rem;">
+            <input id="lookup-input" type="text" placeholder="Jump to exact title…" />
+            <button id="btn-lookup-iterative" class="btn-secondary">Lookup (Iterative)</button>
+            <button id="btn-lookup-recursive" class="btn-secondary">Lookup (Recursive)</button>
+          </div>
+          <div id="lookup-result"></div>
+          <div class="ranking-row" style="margin-top:0.75rem; align-items:center;">
+            <span class="ranking-label">Quick jump:</span>
+            <div id="quick-tag-jump-ranking"></div>
+          </div>
+          <div id="quick-find-result-ranking"></div>
+          <div id="ranked-results"></div>
+        </section>
+
+        <!-- Phase 4: Smart Search -->
+        <section id="smart-search-section">
+          <h2 class="section-title">🧠 Smart Search <span class="ai-badge">AI</span></h2>
+          <p class="section-hint">Finds notes by meaning, not keywords. Powered by local embeddings.</p>
+          <div class="smart-search-bar">
+            <input id="smart-search-input" type="text"
+                   placeholder="e.g. leg day exercise plan, dinner ideas with vegetables…" />
+            <button id="btn-smart-search" class="btn-primary">Search</button>
+          </div>
+          <div id="smart-search-results"></div>
+        </section>
+
+        <!-- Notes List -->
+        <section id="notes-section">
+          <div class="notes-header">
+            <h2 class="section-title">Notes</h2>
+            <span id="notes-count" class="notes-count"></span>
+          </div>
+          <p id="loading-msg">Loading notes…</p>
+          <p id="error-msg" class="error-msg hidden"></p>
+          <div id="notes-list"></div>
+        </section>
+
+      </main>
+    </div>
+
+    <footer>
+      <p>Zomato Notes — On-Call Knowledge Base</p>
+    </footer>
+
+  </div><!-- end #app-view -->
+
+  <!-- Bulk Tag Toolbar -->
   <div id="bulk-toolbar" class="hidden">
     <span id="selected-count">0 selected</span>
     <input id="bulk-tag-input" type="text" placeholder="New tag for selected…" />
@@ -195,9 +221,7 @@
     <button id="btn-bulk-cancel" class="btn-secondary">Cancel</button>
   </div>
 
-  <!-- ================================================================
-       P2: Similar Notes Sidebar — slide-in panel on card click
-  ================================================================ -->
+  <!-- Similar Notes Sidebar -->
   <aside id="similar-notes-panel" class="hidden">
     <div class="similar-panel-header">
       <h4>Similar Notes</h4>

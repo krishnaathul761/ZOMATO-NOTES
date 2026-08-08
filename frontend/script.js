@@ -7,13 +7,14 @@
 const API_BASE    = "https://zomato-notes.onrender.com";
 const X_TOKEN     = "zomato-dev-token";
 const CACHE_KEY   = "zomato_notes_cache";
-const MY_OWNER_ID = 1;
+const USER_KEY    = "zomato_current_user";   // {id, name} stored in localStorage
 
 // ── State ───────────────────────────────────────────────────
 let allNotes        = [];
 let activeTag       = null;
 let showMyNotesOnly = false;
 let searchTimer     = null;
+let currentUser     = null;   // {id, name} — set on login, cleared on logout
 
 // ── P3: Category tree ───────────────────────────────────────
 const CATEGORY_TREE = {
@@ -24,6 +25,128 @@ const CATEGORY_TREE = {
     { name: "Travel",   children: [] },
   ],
 };
+
+// ============================================================
+// VIEW SWITCHING — Home ↔ App
+// ============================================================
+
+function showHomeView() {
+  document.getElementById("home-view").style.display  = "flex";
+  document.getElementById("app-view").style.display   = "none";
+  document.getElementById("nav-app-actions").style.display = "none";
+  loadHomeAuthors();
+}
+
+function showAppView(user) {
+  currentUser = user;
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
+  document.getElementById("home-view").style.display   = "none";
+  document.getElementById("app-view").style.display    = "block";
+  document.getElementById("nav-app-actions").style.display = "flex";
+  // Show "👤 Alice" in nav
+  document.getElementById("nav-user-label").textContent = `👤 ${user.name}`;
+  // Boot the app
+  initApp();
+}
+
+async function loadHomeAuthors() {
+  const loadingEl = document.getElementById("home-author-loading");
+  const selectRow = document.getElementById("home-select-row");
+  const selectEl  = document.getElementById("home-author-select");
+  const errorEl   = document.getElementById("home-select-error");
+
+  loadingEl.textContent = "Loading authors…";
+  loadingEl.classList.remove("hidden");
+  selectRow.classList.add("hidden");
+  errorEl.classList.add("hidden");
+
+  try {
+    const users = await fetchUsers();
+    loadingEl.classList.add("hidden");
+
+    if (!users.length) {
+      loadingEl.textContent = "No authors yet — create one below.";
+      loadingEl.classList.remove("hidden");
+      return;
+    }
+
+    selectEl.innerHTML = "";
+    users.forEach(u => {
+      const opt = document.createElement("option");
+      opt.value = u.id;
+      opt.textContent = u.name;
+      selectEl.appendChild(opt);
+    });
+
+    selectRow.classList.remove("hidden");
+  } catch (err) {
+    loadingEl.textContent = "Could not load authors — check connection.";
+  }
+}
+
+// Wire home view buttons on DOM ready
+document.addEventListener("DOMContentLoaded", () => {
+  // "Go to Notes" button
+  document.getElementById("btn-home-select").addEventListener("click", () => {
+    const sel    = document.getElementById("home-author-select");
+    const userId = parseInt(sel.value, 10);
+    const name   = sel.options[sel.selectedIndex].textContent;
+    showAppView({ id: userId, name });
+  });
+
+  // Register form on home view
+  document.getElementById("home-register-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name     = document.getElementById("home-reg-name").value.trim();
+    const email    = document.getElementById("home-reg-email").value.trim();
+    const password = document.getElementById("home-reg-password").value;
+    const errorEl  = document.getElementById("home-register-error");
+    errorEl.classList.add("hidden");
+
+    if (!name || !email || !password) {
+      errorEl.textContent = "All fields are required.";
+      errorEl.classList.remove("hidden");
+      return;
+    }
+
+    const btn = document.getElementById("btn-home-register");
+    btn.disabled = true; btn.textContent = "Creating…";
+
+    try {
+      const newUser = await createUser(name, email, password);
+      showAppView({ id: newUser.id, name: newUser.name });
+    } catch (err) {
+      errorEl.textContent = err.message;
+      errorEl.classList.remove("hidden");
+    } finally {
+      btn.disabled = false; btn.textContent = "Create Profile & Go to Notes →";
+    }
+  });
+
+  // Logout button
+  document.getElementById("btn-logout").addEventListener("click", () => {
+    currentUser = null;
+    localStorage.removeItem(USER_KEY);
+    // Reset app state
+    allNotes = []; showMyNotesOnly = false; activeTag = null;
+    document.getElementById("notes-list").innerHTML = "";
+    document.getElementById("category-tree").innerHTML = "";
+    showHomeView();
+  });
+
+  // Boot: check if user already logged in
+  const saved = localStorage.getItem(USER_KEY);
+  if (saved) {
+    try {
+      const user = JSON.parse(saved);
+      if (user && user.id && user.name) {
+        showAppView(user);
+        return;
+      }
+    } catch (_) {}
+  }
+  showHomeView();
+});
 
 // ============================================================
 // DATA LAYER
@@ -389,7 +512,7 @@ function handleTagFilter(tag, chipEl) {
 
 function applyFilters() {
   const q = document.getElementById("search-input").value.trim().toLowerCase();
-  let r = showMyNotesOnly ? allNotes.filter(n => n.owner_id === MY_OWNER_ID) : allNotes;
+  let r = showMyNotesOnly ? allNotes.filter(n => n.owner_id === (currentUser ? currentUser.id : 1)) : allNotes;
   if (activeTag) r = r.filter(n => n.tag === activeTag);
   if (q) r = r.filter(n => n.title.toLowerCase().includes(q) || (n.tag && n.tag.toLowerCase().includes(q)));
   renderNotes(r);
@@ -420,9 +543,8 @@ async function handleAddNote(e) {
   const title    = document.getElementById("input-title").value.trim();
   const content  = document.getElementById("input-content").value.trim();
   const tag      = document.getElementById("input-tag").value.trim() || null;
-  const ownerId  = parseInt(document.getElementById("input-owner").value, 10);
+  const ownerId  = currentUser ? currentUser.id : 1;
   const severity = document.getElementById("input-severity").value || null;
-  // Save last used author
   localStorage.setItem("last_author_id", ownerId);
   const errorEl  = document.getElementById("form-error");
 
@@ -527,27 +649,23 @@ function showError(msg) { const el = document.getElementById("error-msg"); el.te
 // ============================================================
 // INIT
 // ============================================================
-async function init() {
+async function initApp() {
   showLoading(true);
   document.getElementById("error-msg").classList.add("hidden");
   document.getElementById("offline-banner").classList.add("hidden");
 
-  // Load users — non-fatal, fallback to seeded defaults if it fails
+  // Load users for the sidebar list and Author map — non-fatal
   try {
     const users = await fetchUsers();
     users.forEach(u => { userMap[u.id] = u.name; });
-    buildAuthorDropdown(users);
     buildUserList(users);
   } catch (err) {
     console.warn("Could not load users:", err.message);
-    // Fallback: seed defaults so the Author dropdown is never empty
-    const defaults = [{ id: 1, name: "Alice" }, { id: 2, name: "Bob" }];
-    defaults.forEach(u => { userMap[u.id] = u.name; });
-    buildAuthorDropdown(defaults);
-    buildUserList(defaults);
+    if (currentUser) userMap[currentUser.id] = currentUser.name;
+    buildUserList(currentUser ? [currentUser] : []);
   }
 
-  // Load notes — show offline banner only if this fails
+  // Load notes
   try {
     allNotes = await fetchNotes();
     buildTagChips(allNotes);
@@ -567,12 +685,16 @@ async function init() {
     showLoading(false);
   }
 
-  const treeRoot = document.createElement("ul");
-  treeRoot.appendChild(renderTree(CATEGORY_TREE));
-  document.getElementById("category-tree").appendChild(treeRoot);
+  // Build category tree (only once)
+  const treeContainer = document.getElementById("category-tree");
+  if (!treeContainer.hasChildNodes()) {
+    const treeRoot = document.createElement("ul");
+    treeRoot.appendChild(renderTree(CATEGORY_TREE));
+    treeContainer.appendChild(treeRoot);
+  }
 }
 
-document.addEventListener("DOMContentLoaded", init);
+// initApp() is called by showAppView() — not directly on DOMContentLoaded
 
 // ============================================================
 // PHASE 3 — RANKING ENGINE

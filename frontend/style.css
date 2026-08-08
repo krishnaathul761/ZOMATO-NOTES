@@ -682,3 +682,107 @@ select:focus {
   margin-left: auto;
   font-weight: 500;
 }
+
+/* ============================================================
+   HOME VIEW
+   ============================================================ */
+#home-view {
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.home-container {
+  width: 100%;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.home-hero {
+  text-align: center;
+  padding: 1.5rem 0 0.5rem;
+}
+.home-logo    { font-size: 2.5rem; }
+.home-title   { font-size: 1.8rem; font-weight: 800; color: var(--red); margin: 0.25rem 0; }
+.home-subtitle { font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; }
+
+.home-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+  box-shadow: var(--shadow);
+}
+.home-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  color: var(--text);
+}
+.home-card-hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.home-select-row {
+  display: flex;
+  gap: 0.5rem;
+}
+#home-select-row { display: flex; gap: 0.5rem; }
+#home-select-row select { flex: 1; }
+
+.home-form-row  { margin-bottom: 0.6rem; }
+.home-form-row input { width: 100%; }
+
+.home-loading-msg {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  padding: 0.4rem 0;
+}
+
+.home-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+.home-divider::before,
+.home-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* Nav user label */
+.nav-user-label {
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.85);
+  margin-right: 0.25rem;
+  font-weight: 500;
+}
+
+/* Logout button */
+.logout-btn {
+  padding: 0.3rem 0.85rem;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.35);
+  color: #fff;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 0.82rem;
+  transition: background var(--transition);
+}
+.logout-btn:hover { background: rgba(255,255,255,0.25); }
+
+@media (max-width: 600px) {
+  .home-container { max-width: 100%; }
+  #home-select-row { flex-direction: column; }
+}
