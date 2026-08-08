@@ -90,9 +90,18 @@ async function updateNote(id, patch) {
 let userMap = {};
 
 async function fetchUsers() {
-  const res = await fetch(`${API_BASE}/users`);
-  if (!res.ok) throw new Error(`GET /users failed: ${res.status}`);
-  return res.json(); // [{id, name, email, created_at}, ...]
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 90000);
+  try {
+    const res = await fetch(`${API_BASE}/users`, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!res.ok) throw new Error(`GET /users failed: ${res.status}`);
+    return res.json();
+  } catch (err) {
+    clearTimeout(timeout);
+    if (err.name === "AbortError") throw new Error("Users request timed out.");
+    throw err;
+  }
 }
 
 async function createUser(name, email, password) {
@@ -474,13 +483,25 @@ function showError(msg) { const el = document.getElementById("error-msg"); el.te
 async function init() {
   showLoading(true);
   document.getElementById("error-msg").classList.add("hidden");
+  document.getElementById("offline-banner").classList.add("hidden");
+
+  // Load users — non-fatal, fallback to seeded defaults if it fails
   try {
-    // Load users first so Author dropdown and userMap are ready
     const users = await fetchUsers();
     users.forEach(u => { userMap[u.id] = u.name; });
     buildAuthorDropdown(users);
     buildUserList(users);
+  } catch (err) {
+    console.warn("Could not load users:", err.message);
+    // Fallback: seed defaults so the Author dropdown is never empty
+    const defaults = [{ id: 1, name: "Alice" }, { id: 2, name: "Bob" }];
+    defaults.forEach(u => { userMap[u.id] = u.name; });
+    buildAuthorDropdown(defaults);
+    buildUserList(defaults);
+  }
 
+  // Load notes — show offline banner only if this fails
+  try {
     allNotes = await fetchNotes();
     buildTagChips(allNotes);
     renderNotes(allNotes);
@@ -498,6 +519,7 @@ async function init() {
   } finally {
     showLoading(false);
   }
+
   const treeRoot = document.createElement("ul");
   treeRoot.appendChild(renderTree(CATEGORY_TREE));
   document.getElementById("category-tree").appendChild(treeRoot);
