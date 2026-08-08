@@ -69,6 +69,7 @@ function showAppView(user) {
   showMyNotesOnly = false;
   document.getElementById("btn-all-notes").classList.add("active");
   document.getElementById("btn-my-notes").classList.remove("active");
+  clearSearchState();
   // Boot the app
   initApp();
 }
@@ -158,6 +159,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("nav-user-label").textContent = "";
     document.getElementById("btn-all-notes").classList.add("active");
     document.getElementById("btn-my-notes").classList.remove("active");
+    clearSearchState();
     showHomeView();
   });
 
@@ -816,18 +818,28 @@ function openProfileModal() {
   // Fill in user info
   document.getElementById("profile-name-display").textContent  = currentUser.name;
   document.getElementById("profile-email-display").textContent = currentUser.email || "";
-  // Avatar: first letter of name
   document.getElementById("profile-avatar").textContent = currentUser.name.charAt(0).toUpperCase();
-  // Pre-fill name field
   document.getElementById("profile-new-name").value = currentUser.name;
+
   // Clear all error messages and password fields
   ["profile-name-error","profile-password-error","profile-delete-error"].forEach(id => {
-    document.getElementById(id).classList.add("hidden");
+    const el = document.getElementById(id);
+    el.classList.add("hidden");
+    el.style.color = "";
   });
   ["profile-name-password","profile-current-password","profile-new-password",
    "profile-confirm-password","profile-delete-password"].forEach(id => {
     document.getElementById(id).value = "";
   });
+
+  // T4.2/T4.3 — always reset all button states on open
+  const btnSaveName     = document.getElementById("btn-save-name");
+  const btnSavePassword = document.getElementById("btn-save-password");
+  const btnDelete       = document.getElementById("btn-delete-account");
+  btnSaveName.disabled     = false; btnSaveName.textContent     = "Save Name";
+  btnSavePassword.disabled = false; btnSavePassword.textContent = "Change Password";
+  btnDelete.disabled       = false; btnDelete.textContent       = "Delete My Account";
+
   document.getElementById("profile-modal").classList.remove("hidden");
 }
 
@@ -939,13 +951,21 @@ document.addEventListener("DOMContentLoaded", () => {
     const errEl    = document.getElementById("profile-delete-error");
     errEl.classList.add("hidden");
 
-    if (!password) { errEl.textContent = "Enter your password to confirm deletion."; errEl.classList.remove("hidden"); return; }
+    if (!password) {
+      errEl.textContent = "Enter your password to confirm deletion.";
+      errEl.classList.remove("hidden");
+      return;
+    }
 
     const btn = document.getElementById("btn-delete-account");
     btn.disabled = true; btn.textContent = "Deleting…";
+    let deleted = false;
+
     try {
       await apiDeleteUser(currentUser.id, password);
-      // Account deleted — logout and return to home
+      deleted = true;
+      // T4.1 — reset button before leaving this context
+      btn.disabled = false; btn.textContent = "Delete My Account";
       document.getElementById("profile-modal").classList.add("hidden");
       currentUser = null;
       localStorage.removeItem(USER_KEY);
@@ -959,10 +979,39 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (err) {
       errEl.textContent = err.message;
       errEl.classList.remove("hidden");
-      btn.disabled = false; btn.textContent = "Delete My Account";
+    } finally {
+      // T4.4 — always reset button unless we navigated away (deleted = true handled above)
+      if (!deleted) {
+        btn.disabled = false; btn.textContent = "Delete My Account";
+      }
     }
   });
 });
+
+// ============================================================
+// CLEAR SEARCH STATE — call on logout + login
+// ============================================================
+function clearSearchState() {
+  // Smart search
+  const ss = document.getElementById("smart-search-results");
+  if (ss) { ss.innerHTML = ""; ss.style.color = ""; }
+  const si = document.getElementById("smart-search-input");
+  if (si) si.value = "";
+
+  // Ranked search
+  const rr = document.getElementById("ranked-results");
+  if (rr) { rr.innerHTML = ""; rr.style.color = ""; }
+  const lr = document.getElementById("lookup-result");
+  if (lr) { lr.innerHTML = ""; lr.style.color = ""; }
+  const ki = document.getElementById("keyword-input");
+  if (ki) ki.value = "";
+  const li = document.getElementById("lookup-input");
+  if (li) li.value = "";
+
+  // Main search bar
+  const ms = document.getElementById("search-input");
+  if (ms) ms.value = "";
+}
 
 // ============================================================
 // PHASE 3 — RANKING ENGINE
@@ -1045,6 +1094,26 @@ function renderLookupResult(data, containerId) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+
+  // T2: Keyword clear button — clears input AND results
+  document.getElementById("btn-keyword-clear").addEventListener("click", () => {
+    document.getElementById("keyword-input").value = "";
+    document.getElementById("ranked-results").innerHTML = "";
+    document.getElementById("ranked-results").style.color = "";
+    document.getElementById("btn-sort-relevance").classList.remove("active");
+    document.getElementById("btn-sort-date").classList.remove("active");
+    document.getElementById("keyword-input").focus();
+  });
+
+  // T2: Also clear results when keyword input is manually emptied
+  document.getElementById("keyword-input").addEventListener("input", e => {
+    if (!e.target.value.trim()) {
+      document.getElementById("ranked-results").innerHTML = "";
+      document.getElementById("btn-sort-relevance").classList.remove("active");
+      document.getElementById("btn-sort-date").classList.remove("active");
+    }
+  });
+
   document.getElementById("btn-sort-relevance").addEventListener("click", async () => {
     const kw = document.getElementById("keyword-input").value.trim(); if (!kw) return;
     const btn = document.getElementById("btn-sort-relevance");
@@ -1257,11 +1326,26 @@ async function openSimilarPanel(note) {
     }
     results.forEach(r => {
       const item = document.createElement("div"); item.className = "similar-note-item";
+
       const t = document.createElement("strong"); t.textContent = r.title;
       const s = document.createElement("span"); s.className = "similarity-score";
       s.textContent = " " + (r.similarity * 100).toFixed(1) + "% match";
       const p = document.createElement("p"); p.textContent = r.content.slice(0, 120) + "...";
-      item.appendChild(t); item.appendChild(s); item.appendChild(p);
+
+      // T1.1 — View Note button opens the note view popup
+      const viewBtn = document.createElement("button");
+      viewBtn.className   = "btn-secondary";
+      viewBtn.textContent = "View Note";
+      viewBtn.style.marginTop = "0.4rem";
+      viewBtn.style.fontSize  = "0.75rem";
+      viewBtn.style.padding   = "0.2rem 0.6rem";
+      viewBtn.addEventListener("click", () => {
+        // T1.2 — reuse existing openNoteViewModal, close similar panel first
+        document.getElementById("similar-notes-panel").classList.add("hidden");
+        openNoteViewModal(r);
+      });
+
+      item.appendChild(t); item.appendChild(s); item.appendChild(p); item.appendChild(viewBtn);
       list.appendChild(item);
     });
   } catch (err) {
