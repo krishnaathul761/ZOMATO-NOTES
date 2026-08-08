@@ -34,7 +34,11 @@ function showHomeView() {
   document.getElementById("home-view").style.display  = "flex";
   document.getElementById("app-view").style.display   = "none";
   document.getElementById("nav-app-actions").style.display = "none";
-  loadHomeAuthors();
+  // Clear login form on return
+  const lf = document.getElementById("home-login-form");
+  if (lf) lf.reset();
+  const le = document.getElementById("home-login-error");
+  if (le) le.classList.add("hidden");
 }
 
 function showAppView(user) {
@@ -49,49 +53,36 @@ function showAppView(user) {
   initApp();
 }
 
-async function loadHomeAuthors() {
-  const loadingEl = document.getElementById("home-author-loading");
-  const selectRow = document.getElementById("home-select-row");
-  const selectEl  = document.getElementById("home-author-select");
-  const errorEl   = document.getElementById("home-select-error");
-
-  loadingEl.textContent = "Loading authors…";
-  loadingEl.classList.remove("hidden");
-  selectRow.classList.add("hidden");
-  errorEl.classList.add("hidden");
-
-  try {
-    const users = await fetchUsers();
-    loadingEl.classList.add("hidden");
-
-    if (!users.length) {
-      loadingEl.textContent = "No authors yet — create one below.";
-      loadingEl.classList.remove("hidden");
-      return;
-    }
-
-    selectEl.innerHTML = "";
-    users.forEach(u => {
-      const opt = document.createElement("option");
-      opt.value = u.id;
-      opt.textContent = u.name;
-      selectEl.appendChild(opt);
-    });
-
-    selectRow.classList.remove("hidden");
-  } catch (err) {
-    loadingEl.textContent = "Could not load authors — check connection.";
-  }
-}
 
 // Wire home view buttons on DOM ready
 document.addEventListener("DOMContentLoaded", () => {
-  // "Go to Notes" button
-  document.getElementById("btn-home-select").addEventListener("click", () => {
-    const sel    = document.getElementById("home-author-select");
-    const userId = parseInt(sel.value, 10);
-    const name   = sel.options[sel.selectedIndex].textContent;
-    showAppView({ id: userId, name });
+
+  // Login form
+  document.getElementById("home-login-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email    = document.getElementById("home-login-email").value.trim();
+    const password = document.getElementById("home-login-password").value;
+    const errorEl  = document.getElementById("home-login-error");
+    errorEl.classList.add("hidden");
+
+    if (!email || !password) {
+      errorEl.textContent = "Email and password are required.";
+      errorEl.classList.remove("hidden");
+      return;
+    }
+
+    const btn = document.getElementById("btn-home-login");
+    btn.disabled = true; btn.textContent = "Logging in…";
+
+    try {
+      const user = await loginUser(email, password);
+      showAppView({ id: user.id, name: user.name });
+    } catch (err) {
+      errorEl.textContent = err.message;
+      errorEl.classList.remove("hidden");
+    } finally {
+      btn.disabled = false; btn.textContent = "Login →";
+    }
   });
 
   // Register form on home view
@@ -225,6 +216,19 @@ async function fetchUsers() {
     if (err.name === "AbortError") throw new Error("Users request timed out.");
     throw err;
   }
+}
+
+async function loginUser(email, password) {
+  const res = await fetch(`${API_BASE}/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}));
+    throw new Error(e.detail || "Login failed");
+  }
+  return res.json(); // {id, name, email}
 }
 
 async function createUser(name, email, password) {

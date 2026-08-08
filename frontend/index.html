@@ -43,15 +43,22 @@
         <p class="home-subtitle">On-call knowledge base for support engineers.<br/>Capture incidents. Tag them. Find them fast.</p>
       </div>
 
-      <!-- Continue as existing author -->
+      <!-- Login as existing author -->
       <div class="home-card" id="home-select-card">
-        <h2 class="home-card-title">Continue as</h2>
-        <div id="home-author-loading" class="home-loading-msg">Loading authors…</div>
-        <div id="home-select-row" class="hidden">
-          <select id="home-author-select"></select>
-          <button id="btn-home-select" class="btn-primary">Go to Notes →</button>
-        </div>
-        <p id="home-select-error" class="error-msg hidden"></p>
+        <h2 class="home-card-title">Login</h2>
+        <p class="home-card-hint">Use your registered email and password.</p>
+        <form id="home-login-form" novalidate>
+          <div class="home-form-row">
+            <input id="home-login-email"    type="email"    placeholder="Email address *" autocomplete="email" />
+          </div>
+          <div class="home-form-row">
+            <input id="home-login-password" type="password" placeholder="Password *" autocomplete="current-password" />
+          </div>
+          <p id="home-login-error" class="error-msg hidden"></p>
+          <button type="submit" id="btn-home-login" class="btn-primary" style="width:100%">
+            Login →
+          </button>
+        </form>
       </div>
 
       <!-- Divider -->

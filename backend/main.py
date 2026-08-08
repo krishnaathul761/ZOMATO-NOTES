@@ -113,6 +113,26 @@ def list_users(db: Session = Depends(get_db)):
     return db.query(models.User).order_by(models.User.id).all()
 
 
+@app.post("/login", tags=["Users"])
+def login(payload: dict, db: Session = Depends(get_db)):
+    """
+    Authenticate an author by email + password.
+    Returns the user object on success, 401 on wrong credentials.
+    Note: passwords are stored as plaintext (demo only — not production practice).
+    """
+    email    = payload.get("email", "").strip().lower()
+    password = payload.get("password", "")
+
+    if not email or not password:
+        raise HTTPException(status_code=400, detail="Email and password are required")
+
+    user = crud.get_user_by_email(db, email)
+    if not user or user.password != password:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+
+    return {"id": user.id, "name": user.name, "email": user.email}
+
+
 # ===========================================================================
 # NOTE ENDPOINTS
 # NOTE: specific paths (/import, /search, /lookup, /quick-find, /smart-search)
