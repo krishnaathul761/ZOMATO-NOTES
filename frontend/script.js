@@ -362,13 +362,35 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 // RENDERING
 // ============================================================
+function parseUTC(iso) {
+  // Supabase returns UTC timestamps without 'Z' suffix.
+  // Appending 'Z' tells the browser to parse as UTC, not local time.
+  if (!iso) return new Date();
+  return new Date(iso.endsWith("Z") ? iso : iso + "Z");
+}
+
 function relativeTime(iso) {
-  const d = Date.now() - new Date(iso).getTime();
-  const m = Math.floor(d / 60000), h = Math.floor(d / 3600000), dy = Math.floor(d / 86400000);
-  if (m < 1) return "just now";
-  if (m < 60) return `${m} min ago`;
-  if (h < 24) return `${h} hr ago`;
-  return `${dy}d ago`;
+  const diff = Date.now() - parseUTC(iso).getTime();
+  const m  = Math.floor(diff / 60000);
+  const h  = Math.floor(diff / 3600000);
+  const dy = Math.floor(diff / 86400000);
+  if (diff < 0)   return "just now";           // clock skew guard
+  if (m  <  1)    return "just now";
+  if (m  < 60)    return `${m} min ago`;
+  if (h  < 24)    return `${h} hr ago`;
+  if (dy <  7)    return `${dy}d ago`;
+  return parseUTC(iso).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+}
+
+function formatAbsolute(iso) {
+  // Human-readable local time shown on hover
+  return parseUTC(iso).toLocaleString(undefined, {
+    day:    "numeric",
+    month:  "short",
+    year:   "numeric",
+    hour:   "2-digit",
+    minute: "2-digit",
+  });
 }
 
 function createNoteCard(note) {
@@ -416,7 +438,10 @@ function createNoteCard(note) {
   // Meta
   const meta = document.createElement("div"); meta.className = "note-meta";
   const tagEl = document.createElement("span"); tagEl.className = "note-tag"; tagEl.textContent = note.tag || "untagged";
-  const timeEl = document.createElement("span"); timeEl.className = "note-time"; timeEl.title = note.created_at; timeEl.textContent = relativeTime(note.created_at);
+  const timeEl = document.createElement("span");
+  timeEl.className   = "note-time";
+  timeEl.title       = formatAbsolute(note.created_at);   // hover: "4 Aug 2026, 12:47 PM"
+  timeEl.textContent = relativeTime(note.created_at);     // display: "3 min ago"
   const ownerEl = document.createElement("span"); ownerEl.className = "note-owner";
   ownerEl.textContent = `by ${userMap[note.owner_id] || `Author #${note.owner_id}`}`;
   meta.appendChild(tagEl); meta.appendChild(timeEl); meta.appendChild(ownerEl);
