@@ -1,4 +1,4 @@
-import asyncio
+﻿import asyncio
 import os
 import time
 from datetime import datetime
@@ -37,7 +37,7 @@ import json
 load_dotenv()
 
 # ---------------------------------------------------------------------------
-# Create all tables on startup — non-fatal if DB is temporarily unreachable
+# Create all tables on startup â€” non-fatal if DB is temporarily unreachable
 # ---------------------------------------------------------------------------
 try:
     models.Base.metadata.create_all(bind=engine)
@@ -52,11 +52,11 @@ except Exception as e:
 app = FastAPI(
     title="Zomato Notes API",
     description="Internal knowledge-base for on-call support engineers.",
-    version="1.0.1",
+    version="1.0.2",
 )
 
 # ---------------------------------------------------------------------------
-# CORS — allow the frontend dev server origins
+# CORS â€” allow the frontend dev server origins
 # ---------------------------------------------------------------------------
 app.add_middleware(
     CORSMiddleware,
@@ -67,7 +67,7 @@ app.add_middleware(
 )
 
 # ---------------------------------------------------------------------------
-# X-Process-Time middleware — on every response
+# X-Process-Time middleware â€” on every response
 # ---------------------------------------------------------------------------
 @app.middleware("http")
 async def add_process_time_header(request, call_next):
@@ -77,7 +77,7 @@ async def add_process_time_header(request, call_next):
     return response
 
 # ---------------------------------------------------------------------------
-# Auth dependency — used only on DELETE /notes/{id}
+# Auth dependency â€” used only on DELETE /notes/{id}
 # ---------------------------------------------------------------------------
 X_TOKEN = os.getenv("X_TOKEN", "supersecret")
 
@@ -86,7 +86,7 @@ def verify_token(x_token: Optional[str] = Header(default=None)):
         raise HTTPException(status_code=401, detail="Invalid or missing x-token")
 
 # ---------------------------------------------------------------------------
-# Background task — simulates a 2-3 s indexing step
+# Background task â€” simulates a 2-3 s indexing step
 # ---------------------------------------------------------------------------
 async def fake_index_task(note_id: int):
     await asyncio.sleep(2.5)
@@ -121,7 +121,7 @@ def list_users(db: Session = Depends(get_db)):
 # ===========================================================================
 
 # ---------------------------------------------------------------------------
-# POST /notes/import  — bulk import from .txt file
+# POST /notes/import  â€” bulk import from .txt file
 # ---------------------------------------------------------------------------
 @app.post("/notes/import", tags=["Notes"])
 async def import_notes(
@@ -182,7 +182,7 @@ async def create_note(
 
     # --- Phase 4: AI auto-tagging ---
     # Call get_ai_response server-side; parse the JSON suggestion.
-    # json.loads failures are caught and logged — note is still created with ai_suggestion=null.
+    # json.loads failures are caught and logged â€” note is still created with ai_suggestion=null.
     ai_suggestion = None
     raw = None
     try:
@@ -193,14 +193,14 @@ async def create_note(
         ai_suggestion = None
 
     response_data = schemas.NoteResponse.model_validate(db_note)
-    # Attach ai_suggestion to the response (not persisted to DB — returned in response only)
+    # Attach ai_suggestion to the response (not persisted to DB â€” returned in response only)
     result = response_data.model_dump()
     result["ai_suggestion"] = ai_suggestion
     return result
 
 
 # ---------------------------------------------------------------------------
-# GET /notes/search  — keyword relevance OR date sort (Phase 3)
+# GET /notes/search  â€” keyword relevance OR date sort (Phase 3)
 # MUST be declared before /notes/{id}
 # ---------------------------------------------------------------------------
 @app.get("/notes/search", tags=["Ranking"])
@@ -210,9 +210,9 @@ def search_notes(
     db: Session = Depends(get_db),
 ):
     """
-    Phase 3 — Ranking Engine.
-    ?keyword=<value>  → top 5 notes sorted by keyword-occurrence score (insertion sort).
-    ?sort_by=date     → all notes sorted descending by creation time (same sort fn, different key).
+    Phase 3 â€” Ranking Engine.
+    ?keyword=<value>  â†’ top 5 notes sorted by keyword-occurrence score (insertion sort).
+    ?sort_by=date     â†’ all notes sorted descending by creation time (same sort fn, different key).
     """
     notes = crud.get_notes(db)
     note_dicts = [
@@ -243,7 +243,7 @@ def search_notes(
 
 
 # ---------------------------------------------------------------------------
-# GET /notes/lookup  — exact title binary search (Phase 3)
+# GET /notes/lookup  â€” exact title binary search (Phase 3)
 # MUST be declared before /notes/{id}
 # ---------------------------------------------------------------------------
 @app.get("/notes/lookup", tags=["Ranking"])
@@ -253,7 +253,7 @@ def lookup_note(
     db: Session = Depends(get_db),
 ):
     """
-    Phase 3 — Binary search for an exact title match.
+    Phase 3 â€” Binary search for an exact title match.
     DB is sorted ORDER BY title ASC at the SQL level.
     algo=iterative (default) or algo=recursive.
     """
@@ -280,7 +280,7 @@ def lookup_note(
 
 
 # ---------------------------------------------------------------------------
-# GET /notes/quick-find  — linear search by tag (Phase 3)
+# GET /notes/quick-find  â€” linear search by tag (Phase 3)
 # MUST be declared before /notes/{id}
 # ---------------------------------------------------------------------------
 @app.get("/notes/quick-find", tags=["Ranking"])
@@ -289,7 +289,7 @@ def quick_find_note(
     db: Session  = Depends(get_db),
 ):
     """
-    Phase 3 — Linear search (found-flag pattern) for first note matching a tag.
+    Phase 3 â€” Linear search (found-flag pattern) for first note matching a tag.
     Returns found: false (not a 500) when no note with that tag exists.
     """
     notes = crud.get_notes(db)
@@ -308,7 +308,7 @@ def quick_find_note(
 
 
 # ---------------------------------------------------------------------------
-# GET /notes/smart-search  — semantic search via embeddings (Phase 4)
+# GET /notes/smart-search  â€” semantic search via embeddings (Phase 4)
 # MUST be declared before /notes/{id}
 # ---------------------------------------------------------------------------
 @app.get("/notes/smart-search", tags=["Intelligence"])
@@ -317,7 +317,7 @@ def smart_search_notes(
     db: Session = Depends(get_db),
 ):
     """
-    Phase 4 — Semantic search over the ai-demo dataset using
+    Phase 4 â€” Semantic search over the ai-demo dataset using
     sentence-transformers/all-MiniLM-L6-v2 + cosine similarity.
     Returns top 3 notes ranked by semantic similarity.
     Fully offline after the one-time model download.
@@ -376,7 +376,7 @@ def update_note(
 
 
 # ---------------------------------------------------------------------------
-# DELETE /notes/{id}  — requires x-token header
+# DELETE /notes/{id}  â€” requires x-token header
 # ---------------------------------------------------------------------------
 @app.delete("/notes/{note_id}", tags=["Notes"])
 def delete_note(
