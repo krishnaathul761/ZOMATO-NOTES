@@ -57,6 +57,18 @@ function showAppView(user) {
 // Wire home view buttons on DOM ready
 document.addEventListener("DOMContentLoaded", () => {
 
+  // Home button — returns to home view without logging out
+  document.getElementById("btn-nav-home").addEventListener("click", () => {
+    document.getElementById("home-view").style.display  = "flex";
+    document.getElementById("app-view").style.display   = "none";
+    document.getElementById("nav-app-actions").style.display = "none";
+    // Clear login form
+    const lf = document.getElementById("home-login-form");
+    if (lf) lf.reset();
+    const le = document.getElementById("home-login-error");
+    if (le) le.classList.add("hidden");
+  });
+
   // Login form
   document.getElementById("home-login-form").addEventListener("submit", async (e) => {
     e.preventDefault();
