@@ -1340,8 +1340,7 @@ async function openSimilarPanel(note) {
       viewBtn.style.fontSize  = "0.75rem";
       viewBtn.style.padding   = "0.2rem 0.6rem";
       viewBtn.addEventListener("click", () => {
-        // T1.2 — reuse existing openNoteViewModal, close similar panel first
-        document.getElementById("similar-notes-panel").classList.add("hidden");
+        // T1.2 — open note view popup, keep similar notes panel open
         openNoteViewModal(r);
       });
 
