@@ -47,8 +47,10 @@ function showAppView(user) {
   document.getElementById("home-view").style.display   = "none";
   document.getElementById("app-view").style.display    = "block";
   document.getElementById("nav-app-actions").style.display = "flex";
-  // Show "👤 Alice" in nav
+  // Show logged-in user name in nav label
   document.getElementById("nav-user-label").textContent = `👤 ${user.name}`;
+  // Show name on logout button: "Logout Alice"
+  document.getElementById("btn-logout").textContent = `Logout ${user.name}`;
   // Boot the app
   initApp();
 }
@@ -134,6 +136,9 @@ document.addEventListener("DOMContentLoaded", () => {
     allNotes = []; showMyNotesOnly = false; activeTag = null;
     document.getElementById("notes-list").innerHTML = "";
     document.getElementById("category-tree").innerHTML = "";
+    // Reset nav label and button text
+    document.getElementById("nav-user-label").textContent = "";
+    document.getElementById("btn-logout").textContent = "Logout";
     showHomeView();
   });
 
