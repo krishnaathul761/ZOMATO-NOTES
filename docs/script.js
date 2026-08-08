@@ -331,6 +331,53 @@ function buildTagChips(notes) {
     c.appendChild(chip);
   });
   const a = c.querySelector('[data-tag="all"]'); if (a) a.classList.add("active");
+
+  // Also rebuild sidebar Quick Jump with real tags (excludes "all")
+  buildSidebarQuickJump(tags.filter(t => t !== "all"));
+}
+
+function buildSidebarQuickJump(tags) {
+  const container = document.getElementById("quick-tag-jump");
+  container.innerHTML = "";
+  if (!tags.length) {
+    container.textContent = "No tags yet.";
+    container.style.fontSize = "0.78rem";
+    container.style.color = "var(--text-muted)";
+    return;
+  }
+  tags.forEach(tag => {
+    const btn = document.createElement("button");
+    btn.className   = "tag-chip";
+    btn.textContent = tag;
+    btn.title       = `Find first note tagged "${tag}"`;
+    btn.addEventListener("click", async () => {
+      const resultDiv = document.getElementById("quick-find-result");
+      resultDiv.innerHTML = "<small style='color:var(--text-muted)'>Searching…</small>";
+      try {
+        const data = await fetchQuickFind(tag);
+        resultDiv.innerHTML = "";
+        if (data.found) {
+          const card = createNoteCard(data.note);
+          card.classList.add("highlight");
+          resultDiv.appendChild(card);
+          // Scroll to the note in the main list and highlight it
+          const mainCard = document.querySelector(`.note-card[data-id="${data.note.id}"]`);
+          if (mainCard) {
+            mainCard.classList.add("highlight");
+            mainCard.scrollIntoView({ behavior: "smooth", block: "center" });
+            setTimeout(() => mainCard.classList.remove("highlight"), 3000);
+          }
+        } else {
+          resultDiv.textContent = `No notes with tag "${tag}"`;
+          resultDiv.style.fontSize = "0.78rem";
+          resultDiv.style.color = "var(--text-muted)";
+        }
+      } catch (err) {
+        resultDiv.textContent = `Error: ${err.message}`;
+      }
+    });
+    container.appendChild(btn);
+  });
 }
 
 function handleTagFilter(tag, chipEl) {
@@ -599,7 +646,7 @@ document.addEventListener("DOMContentLoaded", () => {
     catch (err) { document.getElementById("lookup-result").textContent = `Error: ${err.message}`; }
   });
 
-  // Quick tag jump buttons
+  // Quick tag jump buttons — Ranked Search section (hardcoded tags)
   const qc = document.getElementById("quick-tag-jump-ranking");
   ["work","health","recipes","travel","random","kb-demo","ai-demo"].forEach(tag => {
     const btn = document.createElement("button"); btn.className = "tag-chip"; btn.textContent = tag;
