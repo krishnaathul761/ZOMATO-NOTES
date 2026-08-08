@@ -807,12 +807,22 @@ async function fetchSimilarNotes(content) {
 async function openSimilarPanel(note) {
   const panel = document.getElementById("similar-notes-panel");
   const list  = document.getElementById("similar-notes-list");
-  list.innerHTML = "<p style='color:var(--text-muted)'>Loading similar notes...</p>";
   panel.classList.remove("hidden");
+
+  list.innerHTML = "";
+  const loadingMsg = document.createElement("p");
+  loadingMsg.style.color = "var(--text-muted)";
+  loadingMsg.style.fontSize = "0.82rem";
+  loadingMsg.textContent = "Loading similar notes... (first load may take 30–60s)";
+  list.appendChild(loadingMsg);
+
   try {
     const results = (await fetchSimilarNotes(note.content)).filter(r => r.id !== note.id);
     list.innerHTML = "";
-    if (!results.length) { list.textContent = "No similar notes found."; return; }
+    if (!results.length) {
+      list.textContent = "No similar notes found.";
+      return;
+    }
     results.forEach(r => {
       const item = document.createElement("div"); item.className = "similar-note-item";
       const t = document.createElement("strong"); t.textContent = r.title;
@@ -823,6 +833,22 @@ async function openSimilarPanel(note) {
       list.appendChild(item);
     });
   } catch (err) {
-    list.textContent = "Could not load similar notes: " + err.message;
+    list.innerHTML = "";
+
+    const errMsg = document.createElement("p");
+    errMsg.style.color = "var(--text-muted)";
+    errMsg.style.fontSize = "0.82rem";
+    errMsg.textContent = err.message.includes("fetch")
+      ? "Backend is waking up. Please wait 30 seconds and try again."
+      : "Could not load similar notes: " + err.message;
+    list.appendChild(errMsg);
+
+    // Retry button
+    const retryBtn = document.createElement("button");
+    retryBtn.className   = "btn-secondary";
+    retryBtn.textContent = "Retry";
+    retryBtn.style.marginTop = "0.5rem";
+    retryBtn.addEventListener("click", () => openSimilarPanel(note));
+    list.appendChild(retryBtn);
   }
 }
