@@ -52,7 +52,7 @@ except Exception as e:
 app = FastAPI(
     title="Zomato Notes API",
     description="Internal knowledge-base for on-call support engineers.",
-    version="1.0.2",
+    version="1.1.0",
 )
 
 # ---------------------------------------------------------------------------
