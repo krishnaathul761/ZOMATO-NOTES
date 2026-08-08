@@ -51,6 +51,12 @@ function showAppView(user) {
   document.getElementById("nav-user-label").textContent = `👤 ${user.name}`;
   // Show name on logout button: "Logout Alice"
   document.getElementById("btn-logout").textContent = `Logout ${user.name}`;
+  // Update My Notes button to show current user's name
+  document.getElementById("btn-my-notes").textContent = `My Notes (${user.name})`;
+  // Always reset to All Notes on login — T8.5
+  showMyNotesOnly = false;
+  document.getElementById("btn-all-notes").classList.add("active");
+  document.getElementById("btn-my-notes").classList.remove("active");
   // Boot the app
   initApp();
 }
@@ -136,9 +142,12 @@ document.addEventListener("DOMContentLoaded", () => {
     allNotes = []; showMyNotesOnly = false; activeTag = null;
     document.getElementById("notes-list").innerHTML = "";
     document.getElementById("category-tree").innerHTML = "";
-    // Reset nav label and button text
+    // Reset nav label, logout button text, and My Notes button text
     document.getElementById("nav-user-label").textContent = "";
     document.getElementById("btn-logout").textContent = "Logout";
+    document.getElementById("btn-my-notes").textContent = "My Notes";
+    document.getElementById("btn-all-notes").classList.add("active");
+    document.getElementById("btn-my-notes").classList.remove("active");
     showHomeView();
   });
 
@@ -709,6 +718,11 @@ document.addEventListener("DOMContentLoaded", () => {
     showMyNotesOnly = true;
     document.getElementById("btn-my-notes").classList.add("active");
     document.getElementById("btn-all-notes").classList.remove("active");
+    // Show count feedback
+    const myCount = allNotes.filter(n => n.owner_id === (currentUser ? currentUser.id : -1)).length;
+    if (myCount === 0) {
+      document.getElementById("notes-count").textContent = `No notes by ${currentUser ? currentUser.name : "you"} yet`;
+    }
     applyFilters();
   });
 });
