@@ -238,6 +238,18 @@
     <div id="similar-notes-list"></div>
   </aside>
 
+  <!-- Delete Confirmation Modal -->
+  <div id="delete-modal" class="modal-overlay hidden">
+    <div class="modal-box">
+      <p class="modal-msg">Are you sure you want to delete this note?</p>
+      <p class="modal-note-title" id="modal-note-title"></p>
+      <div class="modal-actions">
+        <button id="modal-confirm-delete" class="btn-danger">Delete</button>
+        <button id="modal-cancel-delete"  class="btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <script src="script.js"></script>
 </body>
 </html>

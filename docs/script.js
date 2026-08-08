@@ -385,7 +385,7 @@ function createNoteCard(note) {
   // Delete btn
   const del = document.createElement("button");
   del.className = "delete-btn"; del.textContent = "✕"; del.title = "Delete";
-  del.addEventListener("click", e => { e.stopPropagation(); handleDelete(note.id, card); });
+  del.addEventListener("click", e => { e.stopPropagation(); openDeleteModal(note.id, note.title, card); });
   card.appendChild(del);
 
   // Title
@@ -593,6 +593,45 @@ async function handleAddNote(e) {
 // ============================================================
 // DELETE
 // ============================================================
+// ============================================================
+// DELETE CONFIRMATION MODAL
+// ============================================================
+
+// Store the pending delete target
+let _pendingDeleteId   = null;
+let _pendingDeleteCard = null;
+
+function openDeleteModal(id, title, cardEl) {
+  _pendingDeleteId   = id;
+  _pendingDeleteCard = cardEl;
+  document.getElementById("modal-note-title").textContent = `"${title}"`;
+  document.getElementById("delete-modal").classList.remove("hidden");
+}
+
+function closeDeleteModal() {
+  _pendingDeleteId   = null;
+  _pendingDeleteCard = null;
+  document.getElementById("delete-modal").classList.add("hidden");
+}
+
+// Wire modal buttons once on DOM ready
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("modal-confirm-delete").addEventListener("click", async () => {
+    if (!_pendingDeleteId) return;
+    const id     = _pendingDeleteId;
+    const cardEl = _pendingDeleteCard;
+    closeDeleteModal();
+    await handleDelete(id, cardEl);
+  });
+
+  document.getElementById("modal-cancel-delete").addEventListener("click", closeDeleteModal);
+
+  // Close modal when clicking the dark backdrop
+  document.getElementById("delete-modal").addEventListener("click", (e) => {
+    if (e.target === document.getElementById("delete-modal")) closeDeleteModal();
+  });
+});
+
 async function handleDelete(id, cardEl) {
   try {
     await deleteNote(id);
