@@ -565,15 +565,40 @@ function applyFilters() {
 }
 
 // ============================================================
-// DEBOUNCED SEARCH
+// DEBOUNCED SEARCH + SEARCH BUTTON + CLEAR
 // ============================================================
 document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("search-input").addEventListener("input", e => {
+  const searchInput = document.getElementById("search-input");
+
+  // Debounce on keystroke — fires 400ms after user stops typing
+  searchInput.addEventListener("input", e => {
     clearTimeout(searchTimer);
     searchTimer = setTimeout(() => {
       console.log(`[${new Date().toISOString()}] search fired: "${e.target.value.trim()}"`);
       applyFilters();
     }, 400);
+  });
+
+  // Enter key triggers immediately (no wait)
+  searchInput.addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+      clearTimeout(searchTimer);
+      applyFilters();
+    }
+  });
+
+  // Search button triggers immediately
+  document.getElementById("btn-search").addEventListener("click", () => {
+    clearTimeout(searchTimer);
+    applyFilters();
+  });
+
+  // Clear button resets input and shows all notes
+  document.getElementById("btn-search-clear").addEventListener("click", () => {
+    clearTimeout(searchTimer);
+    searchInput.value = "";
+    applyFilters();
+    searchInput.focus();
   });
 });
 
