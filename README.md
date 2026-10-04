@@ -9,8 +9,9 @@ The application combines traditional keyword-based retrieval with semantic searc
 ## 📸 Application Preview
 
 ![ZOMATO-NOTES Dashboard](./assets/dashboard.png)
+---
 
-![ZOMATO-NOTES assets](./assets)
+## 📸[ZOMATO-NOTES assets](./assets)
 
 ---
 
