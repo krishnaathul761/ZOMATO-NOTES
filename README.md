@@ -1,8 +1,16 @@
 ﻿# Zomato Notes -- On-Call Knowledge Base
 
-A capstone full-stack application built around an on-call support engineering knowledge-base use case.
+>A capstone full-stack application built around an on-call support engineering knowledge-base use case.
 ZOMATO-NOTES is designed to help engineers capture, organize, search, and retrieve incident-related knowledge during and after on-call incidents.
 The application combines traditional keyword-based retrieval with semantic search and optional LLM-powered assistance to make relevant information easier to discover during incident response.
+
+---
+
+## 📸 Application Preview
+
+![ZOMATO-NOTES Dashboard](./assets/dashboard.png)
+
+---
 
 **Live URLs (no local setup required to test):**
 - **Frontend:** https://krishnaathul761.github.io/ZOMATO-NOTES/
