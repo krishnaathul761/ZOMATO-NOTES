@@ -28,6 +28,17 @@ sentence-transformers (local embeddings) | Groq LLM (llama-3.1-8b-instant)
 
 ---
 
+## 🔄 How It Works
+
+1. An engineer creates an incident-related note.
+2. The FastAPI backend validates the request.
+3. The note is persisted in PostgreSQL.
+4. Search/indexing processes the note for retrieval.
+5. Traditional search can retrieve matching notes.
+6. Semantic search uses embeddings to identify conceptually related notes.
+7. Optional LLM assistance can help summarize or process retrieved information.
+
+---
 ## Quick Test Without Local Setup
 
 The app is fully deployed. To verify any feature:
