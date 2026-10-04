@@ -10,6 +10,8 @@ The application combines traditional keyword-based retrieval with semantic searc
 
 ![ZOMATO-NOTES Dashboard](./assets/dashboard.png)
 
+![ZOMATO-NOTES assets](./assets)
+
 ---
 
 **Live URLs (no local setup required to test):**
